@@ -15,7 +15,8 @@ def create_lut(func, precision, tag="yourtag"):
     while round_precision(func(x), precision) < func(inf):
         y = round_precision(func(x), precision) - round_offset
         y_scaled = int(y*2**precision)
-        f.write(str(y_scaled) + "\n")
+        y_scaled_hex = f"{y_scaled:x}"
+        f.write(y_scaled_hex + "\n")
         x_prev = x
         x += x_step
     f.close()
