@@ -2,8 +2,8 @@
 module tb_lstm;
 
     localparam WEIGHTS = 4;
-    localparam WIDTHS = 16;
-    logic clk;
+    localparam WIDTH = 16;
+    logic clk = 0;
     logic rst;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h;
@@ -58,4 +58,4 @@ module tb_lstm;
         .y_valid  (          )
     );
 
-
+endmodule

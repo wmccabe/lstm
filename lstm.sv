@@ -17,7 +17,7 @@ module lstm #
     // memories
     input  logic signed [WIDTH - 1 : 0] C_in,
     input  logic signed [WIDTH - 1 : 0] h_in,
-    output logic signed [WIDTH - 1 : 0] C_out
+    output logic signed [WIDTH - 1 : 0] C_out,
 
     // datapath
     input  logic signed [WIDTH - 1 : 0] x_in,
@@ -34,11 +34,7 @@ module lstm #
     // o - output gate
 
     typedef enum logic [1 : 0] {i, f, g, o} weight_index_t;
-    logic [3:0] use_sigmoid;
-    assign use_sigmoid[i] = 1'b1;
-    assign use_sigmoid[f] = 1'b1;
-    assign use_sigmoid[g] = 1'b0;
-    assign use_sigmoid[o] = 1'b1;
+    localparam logic [3:0] use_sigmoid = 4'b1101;
     
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
 
@@ -55,40 +51,40 @@ module lstm #
     for (genvar j = 0; j < WEIGHTS; j = j + 1) begin
         if (use_sigmoid[j]) begin
             function_lookup #(
-                DEPTH         (  1597),
-                SCALED_X      (  1596),
-                MIN_Y         (     0),
-                MAX_Y         (   256),
-                SCALED_OFFSET (   128),
-                LUT_FILE      ( "sigmoid.mem")
+                .DEPTH         (  1597),
+                .SCALED_X      (  1596),
+                .MIN_Y         (     0),
+                .MAX_Y         (   256),
+                .SCALED_OFFSET (   128),
+                .LUT_FILE      ( "sigmoid.mem")
             )
             u_sigmoid 
             (
-                .clk          ( clk          ),
-                .rst          ( rst          ),
-                .x            ( scaled[j]    ),
-                .x_valid      (              ),
-                .y            ( looked_up[j] ),
-                .y_valid      (              )
+                .clk           ( clk          ),
+                .rst           ( rst          ),
+                .x             ( scaled[j]    ),
+                .x_valid       (              ),
+                .y             ( looked_up[j] ),
+                .y_valid       (              )
             );
         end
         else begin
             function_lookup #(
-                DEPTH         (        888),
-                SCALED_X      (        887),
-                MIN_Y         (       -256),
-                MAX_Y         (        256),
-                SCALED_OFFSET (          0),
-                LUT_FILE      ( "tanh.mem")
+                .DEPTH         (        888),
+                .SCALED_X      (        887),
+                .MIN_Y         (       -256),
+                .MAX_Y         (        256),
+                .SCALED_OFFSET (          0),
+                .LUT_FILE      ( "tanh.mem")
             )
             u_tanh    
             (
-                .clk          ( clk          ),
-                .rst          ( rst          ),
-                .x            ( scaled[j]    ),
-                .x_valid      (              ),
-                .y            ( looked_up[j] ),
-                .y_valid      (              )
+                .clk           ( clk          ),
+                .rst           ( rst          ),
+                .x             ( scaled[j]    ),
+                .x_valid       (              ),
+                .y             ( looked_up[j] ),
+                .y_valid       (              )
             );
         end
     end
@@ -107,21 +103,21 @@ module lstm #
     logic signed [WIDTH - 1 : 0] C_out_tanh;
     
     function_lookup #(
-        DEPTH         (        888),
-        SCALED_X      (        887),
-        MIN_Y         (       -256),
-        MAX_Y         (        256),
-        SCALED_OFFSET (          0),
-        LUT_FILE      ( "tanh.mem")
+        .DEPTH         (        888),
+        .SCALED_X      (        887),
+        .MIN_Y         (       -256),
+        .MAX_Y         (        256),
+        .SCALED_OFFSET (          0),
+        .LUT_FILE      ( "tanh.mem")
     )
     u_tanh    
     (
-        .clk          ( clk        ),
-        .rst          ( rst        ),
-        .x            ( C_out_pre  ),
-        .x_valid      (            ),
-        .y            ( C_out_tanh ),
-        .y_valid      (            )
+        .clk           ( clk        ),
+        .rst           ( rst        ),
+        .x             ( C_out_pre  ),
+        .x_valid       (            ),
+        .y             ( C_out_tanh ),
+        .y_valid       (            )
     );
 
 endmodule

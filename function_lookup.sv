@@ -32,6 +32,6 @@ module function_lookup #(
         .clk      (clk),
         .raddr    (search),
         .rdata    (lut)
-    )
+    );
 
 endmodule
