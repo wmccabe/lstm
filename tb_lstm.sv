@@ -12,6 +12,7 @@ module tb_lstm;
     logic signed [WIDTH - 1 : 0] C_in;
     logic signed [WIDTH - 1 : 0] h_in;
     logic signed [WIDTH - 1 : 0] x_in;
+    logic x_valid;
 
     // create clock and reset
     always #2500 clk = ~clk;
@@ -26,6 +27,7 @@ module tb_lstm;
 
     always @(posedge clk) begin
         if (!rst) begin
+            x_valid <= 1'b0;
             repeat(10) @(posedge clk);
             for (int i = 0; i < WEIGHTS; i = i + 1) begin
                 weight_x[i] <= NEG_OFFSET + $random%65536;
@@ -36,6 +38,7 @@ module tb_lstm;
             C_in <= NEG_OFFSET + $random%65536;
             h_in <= NEG_OFFSET + $random%65536;
             x_in <= NEG_OFFSET + $random%65536;
+            x_valid <= 1'b1;
         end
     end
 
@@ -52,7 +55,7 @@ module tb_lstm;
         .h_in     ( h_in     ),
         .C_out    (          ),
         .x_in     ( x_in     ),
-        .x_valid  (          ),
+        .x_valid  ( x_valid  ),
         .x_ready  (          ),
         .y_out    (          ),
         .y_valid  (          )

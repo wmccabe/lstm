@@ -37,6 +37,8 @@ module lstm #
     localparam logic [3:0] use_sigmoid = 4'b1101;
     
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
+    localparam DLY = 5;
+    logic [DLY - 1 : 0] x_valid_dly;
 
     always_ff @(posedge clk) begin
         for(int j = 0; j < WEIGHTS; j = j + 1) begin 
@@ -97,8 +99,12 @@ module lstm #
         C_out_pre <= (looked_up[f]*C_in + looked_up[i]*looked_up[g]) >> 8;
         C_out <= C_out_pre;
         // short term
-        y_out <= (looked_up[o]*C_out_tanh) >> 8; 
+        y_out <= (looked_up[o]*C_out_tanh) >> 8;
+        x_valid_dly <= {x_valid_dly[DLY - 2 : 0], x_valid};
     end
+
+    assign y_valid = x_valid_dly[DLY-1];
+    assign x_ready = !(|x_valid_dly); 
     
     logic signed [WIDTH - 1 : 0] C_out_tanh;
     
