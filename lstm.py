@@ -13,11 +13,14 @@ class Index(Enum):
     g = 2
     o = 3
 
+def createFixedPoint(x, precision):
+    return [round(i*2**precision) for i in x]
+
 class LSTM:
     # def __new__(cls, parameters):
     #     instance = super(ClassName, cls).__new__(cls)
     #     return instance
-    
+    precision = 8
     def __init__(self, Wh, Wx, bh, bx, C_prev=0, h_prev=0):
         self.Wh = Wh # weights
         self.Wx = Wx # weights
@@ -25,6 +28,13 @@ class LSTM:
         self.bx = bx # bias
         self.C_prev = C_prev
         self.h_prev = h_prev
+        # create fixed point values for verilog
+        self.fixed.Wh     = createFixedPoint(self.Wh, precision)
+        self.fixed.Wx     = createFixedPoint(self.Wx, precision)
+        self.fixed.bh     = createFixedPoint(self.bh, precision)
+        self.fixed.bx     = createFixedPoint(self.bx, precision)
+        self.fixed.C_prev = createFixedPoint(self.C_prev, precision)
+        self.fixed.h_prev = createFixedPoint(self.h_prev, precision)
     
     def process(self, X):
         for x in X:
@@ -41,5 +51,8 @@ class LSTM:
             h_t = o_t*math.tanh(C_t)
             self.C_prev = C_t
             self.h_prev = h_t
+            # update fixed point values
+            self.fixed.C_prev = createFixedPoint(self.C_prev, precision)
+            self.fixed.h_prev = createFixedPoint(self.h_prev, precision)
             print(self.C_prev, self.h_prev)
 
