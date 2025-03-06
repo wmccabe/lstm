@@ -1,6 +1,8 @@
 from enum import Enum
 import math
 
+precision = 8
+
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
@@ -14,13 +16,22 @@ class Index(Enum):
     o = 3
 
 def createFixedPoint(x, precision):
-    return [round(i*2**precision) for i in x]
+    try:
+        return [round(i*2**precision) for i in x]
+    except:
+        return round(x*2**precision)
+ 
 
 class LSTM:
-    # def __new__(cls, parameters):
-    #     instance = super(ClassName, cls).__new__(cls)
-    #     return instance
-    precision = 8
+    def updateFixed(self):
+        # create fixed point values for verilog
+        self.fixed_Wh     = createFixedPoint(self.Wh, precision)
+        self.fixed_Wx     = createFixedPoint(self.Wx, precision)
+        self.fixed_bh     = createFixedPoint(self.bh, precision)
+        self.fixed_bx     = createFixedPoint(self.bx, precision)
+        self.fixed_C_prev = createFixedPoint(self.C_prev, precision)
+        self.fixed_h_prev = createFixedPoint(self.h_prev, precision)
+        
     def __init__(self, Wh, Wx, bh, bx, C_prev=0, h_prev=0):
         self.Wh = Wh # weights
         self.Wx = Wx # weights
@@ -28,13 +39,7 @@ class LSTM:
         self.bx = bx # bias
         self.C_prev = C_prev
         self.h_prev = h_prev
-        # create fixed point values for verilog
-        self.fixed.Wh     = createFixedPoint(self.Wh, precision)
-        self.fixed.Wx     = createFixedPoint(self.Wx, precision)
-        self.fixed.bh     = createFixedPoint(self.bh, precision)
-        self.fixed.bx     = createFixedPoint(self.bx, precision)
-        self.fixed.C_prev = createFixedPoint(self.C_prev, precision)
-        self.fixed.h_prev = createFixedPoint(self.h_prev, precision)
+        self.updateFixed()
     
     def process(self, X):
         for x in X:
@@ -52,7 +57,6 @@ class LSTM:
             self.C_prev = C_t
             self.h_prev = h_t
             # update fixed point values
-            self.fixed.C_prev = createFixedPoint(self.C_prev, precision)
-            self.fixed.h_prev = createFixedPoint(self.h_prev, precision)
-            print(self.C_prev, self.h_prev)
+            self.updateFixed()
+            # print(self.h_prev, self.fixed_h_prev)
 

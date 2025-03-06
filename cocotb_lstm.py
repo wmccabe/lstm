@@ -8,9 +8,11 @@ from cocotb.clock import Clock
 async def my_first_test(dut):
     """Try accessing the design."""
 
+    dut.rst.value = 1
     await cocotb.start(cocotb.clock.Clock(dut.clk, 4, 'ns').start())
 
     await cocotb.triggers.Timer(15, units="ns")  # wait a bit
+    dut.rst.value = 0
     await cocotb.triggers.RisingEdge(dut.clk)
     dut.x_valid.value = 1
     await cocotb.triggers.RisingEdge(dut.clk)
