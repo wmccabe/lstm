@@ -1,4 +1,4 @@
-# test_lstm.py (simple)
+# cocotb_lstm.py
 
 import cocotb
 from cocotb.triggers import Timer

@@ -13,7 +13,7 @@ VERILOG_SOURCES += $(PWD)/rom.sv
 TOPLEVEL = lstm
 
 # MODULE is the basename of the Python test file
-MODULE = test_lstm
+MODULE = cocotb_lstm
 
 # Add waveform tracing
 EXTRA_ARGS += --trace --trace-structs
