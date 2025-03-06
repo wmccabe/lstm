@@ -2,17 +2,22 @@
 
 import cocotb
 from cocotb.triggers import Timer
-
+from cocotb.clock import Clock
 
 @cocotb.test()
 async def my_first_test(dut):
     """Try accessing the design."""
 
-    for cycle in range(10):
-        dut.clk.value = 0
-        await Timer(1, units="ns")
-        dut.clk.value = 1
-        await Timer(1, units="ns")
+    await cocotb.start(cocotb.clock.Clock(dut.clk, 4, 'ns').start())
+
+    await cocotb.triggers.Timer(15, units="ns")  # wait a bit
+    await cocotb.triggers.RisingEdge(dut.clk)
+    dut.x_valid.value = 1
+    await cocotb.triggers.RisingEdge(dut.clk)
+    dut.x_valid.value = 0
+    await cocotb.triggers.Timer(40, units="ns")  # wait a bit
+    
+    
 
     dut._log.info("y_valid is %s", dut.y_valid.value)
-    assert dut.y_valid.value != 1, "my_signal_2[0] is not 1!"
+    assert dut.y_valid.value != 1, "y_valid is not 1!"
