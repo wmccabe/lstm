@@ -1,13 +1,20 @@
 from enum import Enum
 import math
+import random
 
 precision = 8
+fullPrecision = 8
 
 def sigmoid(x):
-  return 1 / (1 + math.exp(-x))
+    if x > 100:
+        return 1
+    elif x < 100:
+        return 0
+    else:
+        return 1 / (1 + math.exp(-x))
 
 def asigmoid(y):
-  return math.log(y/(1-y))     
+    return math.log(y/(1-y))     
 
 class Index(Enum):
     i = 0
@@ -15,11 +22,18 @@ class Index(Enum):
     g = 2
     o = 3
 
+def fixedPoint(x, precision):
+    if x >= 0:
+        return round(x*2**precision)
+    else:
+        # two's compliment
+        return round(2**fullPrecision - round(x*2**precision) + 1)
+
 def createFixedPoint(x, precision):
     try:
-        return [round(i*2**precision) for i in x]
+        return [fixedPoint(i, precision) for i in x]
     except:
-        return round(x*2**precision)
+        return fixedPoint(x, precision)
  
 
 class LSTM:
@@ -32,7 +46,7 @@ class LSTM:
         self.fixed_C_prev = createFixedPoint(self.C_prev, precision)
         self.fixed_h_prev = createFixedPoint(self.h_prev, precision)
         
-    def __init__(self, Wh, Wx, bh, bx, C_prev=0, h_prev=0):
+    def __init__(self, Wh=0, Wx=0, bh=0, bx=0, C_prev=0, h_prev=0):
         self.Wh = Wh # weights
         self.Wx = Wx # weights
         self.bh = bh # bias
@@ -41,6 +55,16 @@ class LSTM:
         self.h_prev = h_prev
         self.updateFixed()
     
+    def rand(self):
+        self.Wh = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
+        self.Wx = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
+        self.bh = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
+        self.bx = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
+        self.C_prev = random.uniform(-256, 255)
+        self.h_prev = random.uniform(-256, 255)
+        self.updateFixed()
+        
+         
     def process(self, X):
         for x in X:
             # forget
@@ -55,7 +79,7 @@ class LSTM:
             # short term
             h_t = o_t*math.tanh(C_t)
             self.C_prev = C_t
-            self.h_prev = h_t
+            self.h_prev = h_t # h_prev is also the y value which is compared to expected
             # update fixed point values
             self.updateFixed()
             # print(self.h_prev, self.fixed_h_prev)
