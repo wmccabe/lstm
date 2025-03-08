@@ -3,12 +3,13 @@ import math
 import random
 
 precision = 8
-fullPrecision = 8
+fullPrecision = 16
+gates = 4
 
 def sigmoid(x):
     if x > 100:
         return 1
-    elif x < 100:
+    elif x < -100:
         return 0
     else:
         return 1 / (1 + math.exp(-x))
@@ -27,7 +28,7 @@ def fixedPoint(x, precision):
         return round(x*2**precision)
     else:
         # two's compliment
-        return round(2**fullPrecision - round(x*2**precision) + 1)
+        return round(2**fullPrecision - round(abs(x)*2**precision) + 1)
 
 def createFixedPoint(x, precision):
     try:
@@ -56,28 +57,34 @@ class LSTM:
         self.updateFixed()
     
     def rand(self):
-        self.Wh = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
-        self.Wx = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
-        self.bh = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
-        self.bx = [random.uniform(-256, 255) for i in range(Index.o.value + 1)] 
-        self.C_prev = random.uniform(-256, 255)
-        self.h_prev = random.uniform(-256, 255)
+        min = -0.5
+        max = 0.5
+        self.Wh = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
+        self.Wx = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
+        self.bh = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
+        self.bx = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
+        self.C_prev = random.uniform(min, max)
+        self.h_prev = random.uniform(min, max)
         self.updateFixed()
         
          
     def process(self, X):
+        useSigmoid = [True, True, False, True]
         for x in X:
-            # forget
-            f_t       =   sigmoid(self.Wx[Index.f.value]*x + self.Wh[Index.f.value]*self.h_prev + self.bx[Index.f.value] + self.bh[Index.f.value])
-            # input 
-            i_t       =   sigmoid(self.Wx[Index.i.value]*x + self.Wh[Index.i.value]*self.h_prev + self.bx[Index.i.value] + self.bh[Index.i.value])
-            tilde_C_t = math.tanh(self.Wx[Index.g.value]*x + self.Wh[Index.g.value]*self.h_prev + self.bx[Index.g.value] + self.bh[Index.g.value])
-            # output 
-            o_t       =   sigmoid(self.Wx[Index.o.value]*x + self.Wh[Index.o.value]*self.h_prev + self.bx[Index.o.value] + self.bh[Index.o.value])
+            scaled = gates*[None]
+            activated = gates*[None]
+            for i in range(gates):
+                scaled[i] = self.Wx[i]*x + self.Wh[i]*self.h_prev + self.bx[i] + self.bh[i]
+                # branch on activation functions
+                if useSigmoid[i]:
+                    activated[i] = sigmoid(scaled[i])
+                else:
+                    activated[i] = math.tanh(scaled[i])
+
             # long term
-            C_t = f_t*self.C_prev + i_t*tilde_C_t
+            C_t = activated[Index.f.value]*self.C_prev + activated[Index.i.value]*activated[Index.g.value]
             # short term
-            h_t = o_t*math.tanh(C_t)
+            h_t = activated[Index.o.value]*math.tanh(C_t)
             self.C_prev = C_t
             self.h_prev = h_t # h_prev is also the y value which is compared to expected
             # update fixed point values
