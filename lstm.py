@@ -23,12 +23,23 @@ class Index(Enum):
     g = 2
     o = 3
 
-def fixedPoint(x, precision):
-    if x >= 0:
-        return round(x*2**precision)
+
+def floatingPoint(fixed_x, precision):
+    assert int(fixed_x) == fixed_x
+    x = int(fixed_x)
+    if (x > 2**(fullPrecision - 1)):
+        return -1*(2**fullPrecision - x)/(2**precision)
     else:
+        return x/(2**precision)
+    
+def fixedPoint(floating_x, precision):
+    x = floating_x
+    if (x < 0):
         # two's compliment
-        return round(2**fullPrecision - round(abs(x)*2**precision) + 1)
+        magnitude = round(abs(x)*2**precision)
+        return int(2**fullPrecision - magnitude)
+    else:
+        return round(x*2**precision)
 
 def createFixedPoint(x, precision):
     try:
@@ -57,8 +68,8 @@ class LSTM:
         self.updateFixed()
     
     def rand(self):
-        min = -0.5
-        max = 0.5
+        min = -5
+        max = 5
         self.Wh = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
         self.Wx = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
         self.bh = [random.uniform(min, max) for i in range(Index.o.value + 1)] 
@@ -89,5 +100,4 @@ class LSTM:
             self.h_prev = h_t # h_prev is also the y value which is compared to expected
             # update fixed point values
             self.updateFixed()
-            # print(self.h_prev, self.fixed_h_prev)
 

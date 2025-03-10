@@ -42,7 +42,7 @@ module lstm #
 
     always_ff @(posedge clk) begin
         for(int j = 0; j < WEIGHTS; j = j + 1) begin 
-            scaled[j] = (x_in*weight_x[j] + h_in*weight_h[j] + bias_x[j] + bias_h[j]) >> 8;
+            scaled[j] = (x_in*weight_x[j])/256 + (h_in*weight_h[j])/256 + bias_x[j] + bias_h[j];
         end
     end
 
