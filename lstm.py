@@ -91,7 +91,6 @@ class LSTM:
                     activated[i] = sigmoid(scaled[i])
                 else:
                     activated[i] = math.tanh(scaled[i])
-
             # long term
             C_t = activated[Index.f.value]*self.C_prev + activated[Index.i.value]*activated[Index.g.value]
             # short term

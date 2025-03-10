@@ -34,7 +34,7 @@ module lstm #
     // o - output gate
 
     typedef enum logic [1 : 0] {i, f, g, o} weight_index_t;
-    localparam logic [3:0] use_sigmoid = 4'b1101;
+    localparam logic [3:0] use_sigmoid = 4'b1011;
     
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
     localparam DLY = 5;
@@ -47,7 +47,7 @@ module lstm #
     end
 
     // implement sigmoid and tanh functions
-    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] looked_up;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
 
     generate
     for (genvar j = 0; j < WEIGHTS; j = j + 1) begin
@@ -66,7 +66,7 @@ module lstm #
                 .rst           ( rst          ),
                 .x             ( scaled[j]    ),
                 .x_valid       (              ),
-                .y             ( looked_up[j] ),
+                .y             ( activated[j] ),
                 .y_valid       (              )
             );
         end
@@ -85,7 +85,7 @@ module lstm #
                 .rst           ( rst          ),
                 .x             ( scaled[j]    ),
                 .x_valid       (              ),
-                .y             ( looked_up[j] ),
+                .y             ( activated[j] ),
                 .y_valid       (              )
             );
         end
@@ -96,10 +96,10 @@ module lstm #
     logic signed [WIDTH - 1 : 0] C_out_pre;
     always_ff @(posedge clk) begin
         // long term
-        C_out_pre <= (looked_up[f]*C_in + looked_up[i]*looked_up[g]) >> 8;
+        C_out_pre <= (activated[f]*C_in)/256 + (activated[i]*activated[g])/256;
         C_out <= C_out_pre;
         // short term
-        y_out <= (looked_up[o]*C_out_tanh) >> 8;
+        y_out <= (activated[o]*C_out_tanh)/256;
         x_valid_dly <= {x_valid_dly[DLY - 2 : 0], x_valid};
     end
 

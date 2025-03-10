@@ -7,7 +7,7 @@ import lstm
 from lstm import LSTM
 import random
 weights = 4
-Epsilon = 16
+Epsilon = 5/256
 
 async def test_lstm(dut, pylstm):
     """Pass in the device under test and the python model, randomize inputs and check outputs"""
@@ -38,18 +38,16 @@ async def test_lstm(dut, pylstm):
     # wait for valid output
     await cocotb.triggers.RisingEdge(dut.y_valid)
     floating_point_error = abs(lstm.floatingPoint(int(dut.y_out.value), lstm.precision) - pylstm.h_prev)
-    print(f"{floating_point_error} = |{lstm.floatingPoint(int(dut.y_out.value), lstm.precision)} - {pylstm.h_prev}|")
+    assert floating_point_error < Epsilon
     
     
 
 @cocotb.test()
-async def my_first_test(dut):
-    """Try accessing the design."""
+async def lstm_test_suite(dut):
+    """Set up LSTM tests."""
     pylstm = LSTM() 
-    dut.C_in.value = 64 
     dut.rst.value = 1
     await cocotb.start(cocotb.clock.Clock(dut.clk, 4, 'ns').start())
-
     await cocotb.triggers.Timer(15, units="ns")  # wait a bit
     dut.rst.value = 0
     for _ in range(10):
@@ -57,13 +55,4 @@ async def my_first_test(dut):
         while (dut.x_ready.value != 1):
             await cocotb.triggers.RisingEdge(dut.clk)
         await cocotb.start_soon(test_lstm(dut, pylstm))
-        await cocotb.triggers.FallingEdge(dut.clk)
         await cocotb.triggers.RisingEdge(dut.clk)
-        
-
-    await cocotb.triggers.Timer(40, units="ns")  # wait a bit
-    
-    
-
-    dut._log.info("y_valid is %s", dut.y_valid.value)
-    assert dut.y_valid.value != 1, "y_valid is not 1!"
