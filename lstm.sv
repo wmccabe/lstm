@@ -14,41 +14,76 @@ module lstm #
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x,
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h,
     
-    // memories
-    input  logic signed [WIDTH - 1 : 0] C_in,
-    input  logic signed [WIDTH - 1 : 0] h_in,
-    output logic signed [WIDTH - 1 : 0] C_out,
-
+    
     // datapath
+    output logic                        ready,
+    input  logic signed [WIDTH - 1 : 0] C_in,
+    input  logic                        C_in_valid,
+    input  logic signed [WIDTH - 1 : 0] h_in,
+    input  logic                        h_in_valid,
     input  logic signed [WIDTH - 1 : 0] x_in,
-    input  logic                        x_valid,
-    output logic                        x_ready,
+    input  logic                        x_in_valid,
     output logic signed [WIDTH - 1 : 0] y_out,
-    output logic                        y_valid
+    output logic signed [WIDTH - 1 : 0] C_out,
+    output logic                        y_out_valid
 );
 
     // Enums correspond to different logic paths in the LSTM
-    // i - input gate
-    // f - forget gate
-    // g - cell
-    // o - output gate
+    // i - input gate  [0]
+    // f - forget gate [1]
+    // g - cell        [2]
+    // o - output gate [3]
 
     typedef enum logic [1 : 0] {i, f, g, o} weight_index_t;
+    localparam DLY = 6;
     localparam logic [3:0] use_sigmoid = 4'b1011;
+
+    logic signed [WIDTH - 1 : 0]                  x_in_reg;
+    logic signed [WIDTH - 1 : 0]                  h_in_reg;
+    logic signed [WIDTH - 1 : 0]                  C_in_reg;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x_reg;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h_reg;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x_reg;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h_reg;
     
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
-    localparam DLY = 5;
-    logic [DLY - 1 : 0] x_valid_dly;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
+
+    logic signed [WIDTH - 1 : 0] C_out_pre;
+    logic signed [WIDTH - 1 : 0] C_out_tanh;
+
+    logic [DLY - 1 : 0] x_in_valid_dly;
+
+    // register weights and biases
+    always_ff @(posedge clk) begin
+        weight_x_reg <= weight_x;
+        weight_h_reg <= weight_h;
+        bias_x_reg   <= bias_x;
+        bias_h_reg   <= bias_h;
+    end
 
     always_ff @(posedge clk) begin
+        if (rst) begin
+            x_in_reg <= '0;
+            h_in_reg <= '0;
+            C_in_reg <= '0;
+        end
+        else if (ready) begin
+            if (x_in_valid) x_in_reg <= x_in;
+            if (h_in_valid) h_in_reg <= h_in;
+            if (C_in_valid) C_in_reg <= C_in;
+        end
+    end
+        
+
+    // implement weighting and scaling
+    always_ff @(posedge clk) begin
         for(int j = 0; j < WEIGHTS; j = j + 1) begin 
-            scaled[j] = (x_in*weight_x[j])/256 + (h_in*weight_h[j])/256 + bias_x[j] + bias_h[j];
+            scaled[j] = (x_in_reg*weight_x_reg[j])/256 + (h_in_reg*weight_h_reg[j])/256 + bias_x_reg[j] + bias_h_reg[j];
         end
     end
 
-    // implement sigmoid and tanh functions
-    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
-
+    // implement sigmoid and tanh activation functions
     generate
     for (genvar j = 0; j < WEIGHTS; j = j + 1) begin
         if (use_sigmoid[j]) begin
@@ -93,20 +128,18 @@ module lstm #
     endgenerate
 
     // assign long term and short term memories
-    logic signed [WIDTH - 1 : 0] C_out_pre;
     always_ff @(posedge clk) begin
         // long term
-        C_out_pre <= (activated[f]*C_in)/256 + (activated[i]*activated[g])/256;
+        C_out_pre <= (activated[f]*C_in_reg)/256 + (activated[i]*activated[g])/256;
         C_out <= C_out_pre;
         // short term
         y_out <= (activated[o]*C_out_tanh)/256;
-        x_valid_dly <= {x_valid_dly[DLY - 2 : 0], x_valid};
+        x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid};
     end
 
-    assign y_valid = x_valid_dly[DLY-1];
-    assign x_ready = !(|x_valid_dly); 
+    assign y_out_valid = x_in_valid_dly[DLY-1];
+    assign ready = !(|x_in_valid_dly); 
     
-    logic signed [WIDTH - 1 : 0] C_out_tanh;
     
     function_lookup #(
         .DEPTH         (        888),
