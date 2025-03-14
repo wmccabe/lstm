@@ -23,6 +23,8 @@ class Index(Enum):
     g = 2
     o = 3
 
+def round_precision(x, precision):
+    return round(x*(2**precision))/(2**precision)
 
 def floatingPoint(fixed_x, precision):
     assert int(fixed_x) == fixed_x
@@ -33,7 +35,7 @@ def floatingPoint(fixed_x, precision):
         return x/(2**precision)
     
 def fixedPoint(floating_x, precision):
-    x = floating_x
+    x = round_precision(floating_x, precision)
     if (x < 0):
         # two's compliment
         magnitude = round(abs(x)*2**precision)

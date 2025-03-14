@@ -25,7 +25,7 @@ module lstm #
     input  logic                        x_in_valid,
     output logic signed [WIDTH - 1 : 0] y_out,
     output logic signed [WIDTH - 1 : 0] C_out,
-    output logic                        y_out_valid
+    output logic                        valid
 );
 
     // Enums correspond to different logic paths in the LSTM
@@ -65,14 +65,22 @@ module lstm #
     always_ff @(posedge clk) begin
         if (rst) begin
             x_in_reg <= '0;
-            h_in_reg <= '0;
-            C_in_reg <= '0;
         end
         else if (ready) begin
             if (x_in_valid) x_in_reg <= x_in;
-            if (h_in_valid) h_in_reg <= h_in;
-            if (C_in_valid) C_in_reg <= C_in;
         end
+    end
+
+    always_ff @(posedge clk) begin
+        if      (rst)                 h_in_reg <= '0;
+        else if (ready && h_in_valid) h_in_reg <= h_in;
+        else if (valid)               h_in_reg <= y_out;
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst)                      C_in_reg <= '0;
+        else if (ready && C_in_valid) C_in_reg <= C_in;
+        else if (valid)               C_in_reg <= C_out;
     end
         
 
@@ -137,7 +145,7 @@ module lstm #
         x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid};
     end
 
-    assign y_out_valid = x_in_valid_dly[DLY-1];
+    assign valid = x_in_valid_dly[DLY-1];
     assign ready = !(|x_in_valid_dly); 
     
     

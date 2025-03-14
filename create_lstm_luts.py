@@ -3,17 +3,15 @@ from math import atanh, tanh, inf
 
 precision = 8
 
-def round_precision(x, precision):
-    return round(x*(2**precision))/(2**precision)
 
 def create_lut(func, precision, tag="yourtag"):
     x = 0
     x_step = 1/(2**precision)
-    round_offset = round_precision(func(0), precision)
+    round_offset = lstm.round_precision(func(0), precision)
     scaled_offset = int(round_offset*2**precision)
     f = open(tag + ".mem", "w")
-    while round_precision(func(x), precision) < func(inf):
-        y = round_precision(func(x), precision) - round_offset
+    while lstm.round_precision(func(x), precision) < func(inf):
+        y = lstm.round_precision(func(x), precision) - round_offset
         y_scaled = int(y*2**precision)
         y_scaled_hex = f"{y_scaled:x}"
         f.write(y_scaled_hex + "\n")
