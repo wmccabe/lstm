@@ -25,31 +25,34 @@ async def test_lstm(dut, pylstm):
     
     await cocotb.triggers.RisingEdge(dut.clk)
 
-    # create random x input
-    x = random.uniform(-5, 5)
-    x_fixed = lstm.createFixedPoint(x, lstm.precision)
-    dut.x_in.value = x_fixed
     dut.C_in[0].value = pylstm.fixed_C_prev 
     dut.h_in[0].value = pylstm.fixed_h_prev
-    
-    # assert valid on the input
-    dut.x_in_valid.value = 1
     dut.C_in_valid[0].value = 1
     dut.h_in_valid[0].value = 1
-    pylstm.process([x])
-    await cocotb.triggers.RisingEdge(dut.clk)
-    dut.x_in_valid.value = 0
-    dut.C_in_valid[0].value = 0
-    dut.h_in_valid[0].value = 0
+
+    # create random x input
+    x = [random.uniform(-5, 5) for i in range(int(random.uniform(1,10)))]
+    print(x)
+    pylstm.process(x)
+    for xi in x:
+        while (dut.ready.value != 1):
+            await cocotb.triggers.RisingEdge(dut.clk)
+        dut.x_in.value = lstm.createFixedPoint(xi, lstm.precision)
+        dut.x_in_valid.value = 1
+        await cocotb.triggers.RisingEdge(dut.clk)
+        dut.x_in_valid.value = 0
+        dut.C_in_valid[0].value = 0
+        dut.h_in_valid[0].value = 0
+        await cocotb.triggers.RisingEdge(dut.clk)
+
+    # assert valid on the input
     # wait for valid output
     await cocotb.triggers.RisingEdge(dut.valid)
     floating_point_error = abs(lstm.floatingPoint(int(dut.y_out.value), lstm.precision) - pylstm.h_prev)
     floating_point_error_state = abs(lstm.floatingPoint(int(dut.C_out.value), lstm.precision) - pylstm.C_prev)
-    '''
     print("--------------------")
     print(f"{floating_point_error:.5f} = |{lstm.floatingPoint(int(dut.y_out.value), lstm.precision):.5f} - {pylstm.h_prev}|")
     print(f"{floating_point_error_state:.5f} = |{lstm.floatingPoint(int(dut.C_out.value), lstm.precision):.5f} - {pylstm.C_prev}|")
-    '''
     assert floating_point_error < Epsilon
     assert floating_point_error_state < Epsilon
     
