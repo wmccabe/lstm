@@ -34,7 +34,7 @@ module lstm_layers #
     logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] layer_C_out;
     logic        [LAYERS - 1 : 0]                layer_valid;
 
-    assign ready = &layer_ready;
+    assign ready = layer_ready[0];
     
     assign y_out = layer_y_out[LAYERS - 1];
     assign C_out = layer_C_out[LAYERS - 1];

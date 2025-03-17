@@ -142,7 +142,7 @@ module lstm #
         C_out <= C_out_pre;
         // short term
         y_out <= (activated[o]*C_out_tanh)/256;
-        x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid};
+        x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid && ready};
     end
 
     assign valid = x_in_valid_dly[DLY-1];
