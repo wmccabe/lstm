@@ -102,3 +102,23 @@ class LSTM:
             # update fixed point values
             self.updateFixed()
 
+class LAYERED_LSTM:
+    def __init__(self, layers=1):
+        self.layers = layers
+        self.layer = [LSTM() for layer in range(layers)]
+
+    def rand(self):
+        [layer.rand() for layer in self.layer]
+    
+    def process(self, X):
+        '''
+        For each x in X representing an input at a timestep, send x through self.layers lstm where layers 1+
+        take in y from the previous layer as x. After the first timestep, allow the updated states to recur in each layer.
+        '''
+        for x in X: # time steps
+            for lyr in range(self.layers): # layers
+                if (lyr == 0):
+                    layer_input = x
+                else:
+                    layer_input = self.layer[lyr-1].h_prev
+                self.layer[lyr].process([layer_input])

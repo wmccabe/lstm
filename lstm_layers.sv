@@ -1,6 +1,6 @@
 module lstm_layers #
 (
-    parameter LAYERS   = 1,
+    parameter LAYERS   =  3,
     parameter WIDTH    = 16,
     localparam WEIGHTS =  4
 )
@@ -9,10 +9,10 @@ module lstm_layers #
     input logic                 rst,
     
     // weights & biases
-    input logic signed [LAYERS - 1 : 0][WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x,
-    input logic signed [LAYERS - 1 : 0][WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h,
-    input logic signed [LAYERS - 1 : 0][WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x,
-    input logic signed [LAYERS - 1 : 0][WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h,
+    input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x,
+    input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h,
+    input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x,
+    input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h,
     
     // datapath
     output logic                                        ready,
@@ -34,7 +34,7 @@ module lstm_layers #
     logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] layer_C_out;
     logic        [LAYERS - 1 : 0]                layer_valid;
 
-    assign ready = layer_ready[0];
+    assign ready = &layer_ready;
     
     assign y_out = layer_y_out[LAYERS - 1];
     assign C_out = layer_C_out[LAYERS - 1];
@@ -49,10 +49,10 @@ module lstm_layers #
             .rst              (rst),
             
             // weights & biases
-            .weight_x         (weight_x[layer]         ),
-            .weight_h         (weight_h[layer]         ),
-            .bias_x           (bias_x[layer]           ),
-            .bias_h           (bias_h[layer]           ),
+            .weight_x         (weight_x[layer*WEIGHTS +: WEIGHTS] ),
+            .weight_h         (weight_h[layer*WEIGHTS +: WEIGHTS] ),
+            .bias_x           (bias_x[layer*WEIGHTS +: WEIGHTS]   ),
+            .bias_h           (bias_h[layer*WEIGHTS +: WEIGHTS]   ),
             
             // datapath
             .ready            (layer_ready[layer]      ),
@@ -74,7 +74,7 @@ module lstm_layers #
         else begin
             // Connect adjacent layers
             assign layer_x_in[layer]       = layer_y_out[layer - 1];
-            assign layer_x_in_valid[layer] = layer_valid[layer];
+            assign layer_x_in_valid[layer] = layer_valid[layer - 1];
         end
 
     end
