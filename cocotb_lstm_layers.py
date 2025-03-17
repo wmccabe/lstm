@@ -29,6 +29,11 @@ async def send_input(dut, x):
         for lyr in range(dut.LAYERS.value):
             dut.C_in_valid[lyr].value = 0
             dut.h_in_valid[lyr].value = 0
+            for i in range(weights):
+                dut.weight_x_valid[weights * lyr + i].value = 0
+                dut.weight_h_valid[weights * lyr + i].value = 0
+                dut.bias_x_valid[weights * lyr + i].value = 0
+                dut.bias_h_valid[weights * lyr + i].value = 0
 
 
 async def wait_output(dut, x):
@@ -50,11 +55,13 @@ async def test_lstm(dut):
     for lyr in range(dut.LAYERS.value):
         for i in range(weights):
             dut.weight_x[weights * lyr + i].value = pylstms.layer[lyr].fixed_Wx[i]
+            dut.weight_x_valid[weights * lyr + i].value = 1
             dut.weight_h[weights * lyr + i].value = pylstms.layer[lyr].fixed_Wh[i]
+            dut.weight_h_valid[weights * lyr + i].value = 1
             dut.bias_x[weights * lyr + i].value = pylstms.layer[lyr].fixed_bx[i]
+            dut.bias_x_valid[weights * lyr + i].value = 1
             dut.bias_h[weights * lyr + i].value = pylstms.layer[lyr].fixed_bh[i]
-
-    await cocotb.triggers.RisingEdge(dut.clk)
+            dut.bias_h_valid[weights * lyr + i].value = 1
 
     for lyr in range(dut.LAYERS.value):
         dut.C_in[lyr].value = pylstms.layer[lyr].fixed_C_prev

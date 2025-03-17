@@ -10,9 +10,13 @@ module lstm #
     
     // weights & biases
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x,
+    input logic        [WEIGHTS - 1 : 0]                weight_x_valid,
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h,
+    input logic        [WEIGHTS - 1 : 0]                weight_h_valid,
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x,
+    input logic        [WEIGHTS - 1 : 0]                bias_x_valid,
     input logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h,
+    input logic        [WEIGHTS - 1 : 0]                bias_h_valid,
     
     
     // datapath
@@ -56,10 +60,14 @@ module lstm #
 
     // register weights and biases
     always_ff @(posedge clk) begin
-        weight_x_reg <= weight_x;
-        weight_h_reg <= weight_h;
-        bias_x_reg   <= bias_x;
-        bias_h_reg   <= bias_h;
+        for (int i = 0; i < WEIGHTS; i += 1) begin
+            if (ready) begin
+                if (weight_x_valid[i]) weight_x_reg[i] <= weight_x[i];
+                if (weight_h_valid[i]) weight_h_reg[i] <= weight_h[i];
+                if (bias_x_valid[i])   bias_x_reg[i]   <= bias_x[i];
+                if (bias_h_valid[i])   bias_h_reg[i]   <= bias_h[i];
+            end
+        end
     end
 
     always_ff @(posedge clk) begin

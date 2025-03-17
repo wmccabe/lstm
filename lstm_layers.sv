@@ -10,9 +10,13 @@ module lstm_layers #
     
     // weights & biases
     input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_x,
+    input logic        [LAYERS * WEIGHTS - 1 : 0]                weight_x_valid,
     input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h,
+    input logic        [LAYERS * WEIGHTS - 1 : 0]                weight_h_valid,
     input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x,
+    input logic        [LAYERS * WEIGHTS - 1 : 0]                bias_x_valid,
     input logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h,
+    input logic        [LAYERS * WEIGHTS - 1 : 0]                bias_h_valid,
     
     // datapath
     output logic                                        ready,
@@ -49,10 +53,14 @@ module lstm_layers #
             .rst              (rst),
             
             // weights & biases
-            .weight_x         (weight_x[layer*WEIGHTS +: WEIGHTS] ),
-            .weight_h         (weight_h[layer*WEIGHTS +: WEIGHTS] ),
-            .bias_x           (bias_x[layer*WEIGHTS +: WEIGHTS]   ),
-            .bias_h           (bias_h[layer*WEIGHTS +: WEIGHTS]   ),
+            .weight_x         (weight_x[layer*WEIGHTS +: WEIGHTS]       ),
+            .weight_x_valid   (weight_x_valid[layer*WEIGHTS +: WEIGHTS] ),
+            .weight_h         (weight_h[layer*WEIGHTS +: WEIGHTS]       ),
+            .weight_h_valid   (weight_h_valid[layer*WEIGHTS +: WEIGHTS] ),
+            .bias_x           (bias_x[layer*WEIGHTS +: WEIGHTS]         ),
+            .bias_x_valid     (bias_x_valid[layer*WEIGHTS +: WEIGHTS]   ),
+            .bias_h           (bias_h[layer*WEIGHTS +: WEIGHTS]         ),
+            .bias_h_valid     (bias_h_valid[layer*WEIGHTS +: WEIGHTS]   ),
             
             // datapath
             .ready            (layer_ready[layer]      ),
