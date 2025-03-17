@@ -63,7 +63,7 @@ async def test_lstm(dut):
     
     # fork sending and receiving coroutines
     cocotb.start_soon(send_input(dut,x))
-    await wait_output(dut,x) # block on wait_output before advancing to error checking
+    await cocotb.start_soon(wait_output(dut,x)) # block on wait_output before advancing to error checking
 
     # error checking
     floating_point_error = abs(lstm.floatingPoint(dut.y_out.value, lstm.precision) - pylstms.layer[dut.LAYERS.value - 1].h_prev)
