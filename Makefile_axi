@@ -1,0 +1,21 @@
+# Makefile
+
+# defaults
+SIM ?= verilator
+TOPLEVEL_LANG ?= verilog
+
+VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.sv
+VERILOG_SOURCES += $(PWD)/rtl/simple_dual_one_clock.sv
+VERILOG_SOURCES += $(PWD)/rtl/axi_handshake.sv
+
+# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
+TOPLEVEL = axi4_lite_slave
+
+# MODULE is the basename of the Python test file
+MODULE = cocotb_axi4_lite_slave
+
+# Add waveform tracing
+EXTRA_ARGS += --trace --trace-structs
+
+# include cocotb's make rules to take care of the simulator setup
+include $(shell cocotb-config --makefiles)/Makefile.sim

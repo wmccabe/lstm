@@ -1,4 +1,8 @@
-module axi4_lite_slave
+module axi4_lite_slave #(
+    parameter WIDTH = 32,
+    parameter DEPTH = 256,
+    localparam ADDR_WIDTH = $clog2(DEPTH)
+)
 (
     input  logic          clk,
     input  logic          rst,
@@ -25,15 +29,16 @@ module axi4_lite_slave
     output logic [31 : 0] rdata,
     output logic  [1 : 0] rresp,
     output logic          rvalid,
-    input  logic          rready
+    input  logic          rready,
+    
+    // feed forward address
+    output logic [31 : 0] write_addr,
+    output logic          write_en
 );
 
-    typedef enum logic [2 : 0] {IDLE, RESPOND} state_t;
     
     // write address logic
-    logic [31 : 0] write_addr;
     logic [31 : 0] write_addr_reg;
-    logic write_en;
     
     assign awready    = !rst;
     assign write_addr = (awvalid && awready) ? awaddr : write_addr_reg;
@@ -80,26 +85,26 @@ module axi4_lite_slave
    
     // store read address
     always_ff @(posedge clk) begin
-        if (read_state == IDLE) begin
+        if (read_state == 1'b0) begin
             read_addr_reg <= araddr;
         end
     end
     
     // instantiate a BRAM to support readback
     simple_dual_one_clock #(
-        .WIDTH (32  ),
-        .DEPTH (256 ) 
+        .WIDTH (WIDTH),
+        .DEPTH (DEPTH)
     )
     u_simple_dual_cache
     (
-        .clk   (clk              ),
-        .ena   (1'b1             ),
-        .enb   (1'b1             ),
-        .wea   (write_en         ),
-        .addra (write_addr       ),
-        .addrb (read_addr        ),
-        .dia   (wdata            ),
-        .dob   (rdata            )
+        .clk   (clk                            ),
+        .ena   (1'b1                           ),
+        .enb   (1'b1                           ),
+        .wea   (write_en                       ),
+        .addra (write_addr[ADDR_WIDTH - 1 : 0] ),
+        .addrb (read_addr[ADDR_WIDTH - 1 : 0]  ),
+        .dia   (wdata                          ),
+        .dob   (rdata                          )
     );
 
 endmodule
