@@ -4,10 +4,10 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/lstm_layers.sv
-VERILOG_SOURCES += $(PWD)/lstm.sv
-VERILOG_SOURCES += $(PWD)/function_lookup.sv
-VERILOG_SOURCES += $(PWD)/rom.sv
+VERILOG_SOURCES += $(PWD)/rtl/lstm_layers.sv
+VERILOG_SOURCES += $(PWD)/rtl/lstm.sv
+VERILOG_SOURCES += $(PWD)/rtl/function_lookup.sv
+VERILOG_SOURCES += $(PWD)/rtl/rom.sv
 # use VHDL_SOURCES for VHDL files
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
