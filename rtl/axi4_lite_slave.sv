@@ -32,7 +32,6 @@ module axi4_lite_slave #(
     output logic          rvalid,
     input  logic          rready,
 
-        
     // feed forward address
     output logic [31 : 0] write_addr,
     output logic          write_en,
