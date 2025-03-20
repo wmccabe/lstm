@@ -6,6 +6,7 @@ module axi4_lite_slave #(
 (
     input  logic          clk,
     input  logic          rst,
+    // AXI4-Lite Interface
     // write address channel
     input  logic [31 : 0] awaddr,
     input  logic  [2 : 0] awprot,
@@ -30,10 +31,14 @@ module axi4_lite_slave #(
     output logic  [1 : 0] rresp,
     output logic          rvalid,
     input  logic          rready,
-    
+
+        
     // feed forward address
     output logic [31 : 0] write_addr,
-    output logic          write_en
+    output logic          write_en,
+    input  logic [31 : 0] update_addr,
+    input  logic [31 : 0] update_data,
+    input  logic          update_valid
 );
 
     
@@ -91,20 +96,28 @@ module axi4_lite_slave #(
     end
     
     // instantiate a BRAM to support readback
-    simple_dual_one_clock #(
+    logic [ADDR_WIDTH - 1 : 0] addrb;
+
+    assign addrb = update_valid ? update_addr[ADDR_WIDTH - 1 : 0] : read_addr[ADDR_WIDTH - 1 : 0];
+
+    rams_tdp_rf_rf #(
         .WIDTH (WIDTH),
         .DEPTH (DEPTH)
     )
-    u_simple_dual_cache
-    (
-        .clk   (clk                            ),
-        .ena   (1'b1                           ),
-        .enb   (1'b1                           ),
-        .wea   (write_en                       ),
-        .addra (write_addr[ADDR_WIDTH - 1 : 0] ),
-        .addrb (read_addr[ADDR_WIDTH - 1 : 0]  ),
-        .dia   (wdata                          ),
-        .dob   (rdata                          )
+    u_true_dual_port_cache
+    ( 
+        .clka  (clk                             ),
+        .clkb  (clk                             ),
+        .ena   (1'b1                            ),
+        .enb   (1'b1                            ),
+        .wea   (write_en                        ),
+        .web   (update_valid                    ),
+        .addra (write_addr[ADDR_WIDTH - 1 : 0]  ),
+        .addrb (addrb                           ),
+        .dia   (wdata                           ),
+        .dib   (update_data                     ),
+        .doa   (                                ),
+        .dob   (rdata                           )
     );
 
 endmodule
