@@ -107,16 +107,4 @@ module axi4_lite_slave #(
         .dob   (rdata                          )
     );
 
-
-    lstm_address_decoder #(
-        .OFFSET  (0),
-        .LAYERS  (3)
-    )
-    u_lstm_address_decoder
-    (
-        .address             (write_addr),
-        .write_en            (write_en),
-        .decode_write_enable ()
-    );
-
 endmodule

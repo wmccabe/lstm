@@ -7,7 +7,7 @@ TOPLEVEL_LANG ?= verilog
 VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.sv
 VERILOG_SOURCES += $(PWD)/rtl/simple_dual_one_clock.sv
 VERILOG_SOURCES += $(PWD)/rtl/axi_handshake.sv
-VERILOG_SOURCES += $(PWD)/rtl/lstm_address_decoder.sv
+VERILOG_SOURCES += $(PWD)/rtl/address_decoder.sv
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL = axi4_lite_slave
