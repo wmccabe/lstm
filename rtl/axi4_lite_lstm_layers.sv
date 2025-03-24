@@ -34,9 +34,10 @@ module axi4_lite_lstm_layers #(
     output logic          rvalid,
     input  logic          rready,
     
-    output logic          lstm_ready
+    output logic          lstm_ready,
+    output logic          lstm_valid
 );
-    localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (4 * LAYERS) + 1;
+    localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
     logic [31 : 0] write_addr;
     logic          write_en;
@@ -86,23 +87,23 @@ module axi4_lite_lstm_layers #(
         .write_en     (write_en     ),
         .update_addr  (update_addr  ),
         .update_data  (update_data  ),
-        .update_valid (update_valid ),
+        .update_valid (update_valid )
     );
 
     localparam LSTM_DATA_WIDTH = 16;
 
-    logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_bias;
-    logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] per_layer_input;
+    logic signed [LAYERS * WEIGHTS - 1 : 0][LSTM_DATA_WIDTH - 1 : 0] weight_bias;
+    logic signed [LAYERS - 1 : 0][LSTM_DATA_WIDTH - 1 : 0] per_layer_input;
     assign weight_bias = {LAYERS*WEIGHTS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
     assign per_layer_input = {LAYERS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
     // lstm layer valid offsets
-    localparam WEIGHT_X = LAYERS * WEIGHTS;
+    localparam WEIGHT_X = 0;
     localparam WEIGHT_H = LAYERS * WEIGHTS + WEIGHT_X;
     localparam BIAS_X   = LAYERS * WEIGHTS + WEIGHT_H;
-    localparam BIAS_H   = LAYERS * WEIGHTS + BIAS_H;
-    localparam C_IN     = LAYERS + BIAS_H;
+    localparam BIAS_H   = LAYERS * WEIGHTS + BIAS_X;
+    localparam C_IN     = LAYERS * WEIGHTS + BIAS_H;
     localparam H_IN     = LAYERS + C_IN;
-    localparam X_IN     = H_IN + 1;
+    localparam X_IN     = LAYERS + H_IN;
 
     localparam Y_OUT = NUM_ADDRESSES*ADDRESS_STEP;
     localparam C_OUT = Y_OUT + ADDRESS_STEP;  
@@ -110,7 +111,6 @@ module axi4_lite_lstm_layers #(
     logic [15 : 0] y_out;
     logic [15 : 0] C_out;
     logic [15 : 0] C_out_dly;
-    logic          valid;
     logic          valid_dly;
 
     lstm_layers #(
@@ -123,35 +123,36 @@ module axi4_lite_lstm_layers #(
         
         // weights & biases
         .weight_x       (weight_bias                  ),
-        .weight_x_valid (decode_write_enable[WEIGHT_X -: LAYERS * WEIGHTS] ),
+        .weight_x_valid (decode_write_enable[WEIGHT_X +: LAYERS * WEIGHTS] ),
         .weight_h       (weight_bias                                       ),
-        .weight_h_valid (decode_write_enable[WEIGHT_H -: LAYERS * WEIGHTS] ),
+        .weight_h_valid (decode_write_enable[WEIGHT_H +: LAYERS * WEIGHTS] ),
         .bias_x         (weight_bias                                       ),
-        .bias_x_valid   (decode_write_enable[BIAS_X -: LAYERS * WEIGHTS]   ),
+        .bias_x_valid   (decode_write_enable[BIAS_X +: LAYERS * WEIGHTS]   ),
         .bias_h         (weight_bias                                       ),
-        .bias_h_valid   (decode_write_enable[BIAS_H -: LAYERS * WEIGHTS]   ),
+        .bias_h_valid   (decode_write_enable[BIAS_H +: LAYERS * WEIGHTS]   ),
         
         // datapath
         .ready          (lstm_ready                                        ),
         .C_in           (per_layer_input                                   ),
-        .C_in_valid     (decode_write_enable[C_IN -: LAYERS]               ),
+        .C_in_valid     (decode_write_enable[C_IN +: LAYERS]               ),
         .h_in           (per_layer_input                                   ),
-        .h_in_valid     (decode_write_enable[H_IN -: LAYERS]               ),
-        .x_in           (wdata                                             ),
+        .h_in_valid     (decode_write_enable[H_IN +: LAYERS]               ),
+        .x_in           (wdata[LSTM_DATA_WIDTH - 1 : 0]                    ),
         .x_in_valid     (decode_write_enable[X_IN]                         ),
         .y_out          (y_out                                             ),
         .C_out          (C_out                                             ),
-        .valid          (valid                                             )
+        .valid          (lstm_valid                                        )
     );
    
     // delay outputs to update using single port 
     always_ff @(posedge clk) begin
         C_out_dly <= C_out;
-        valid_dly <= valid;
+        valid_dly <= lstm_valid;
     end
 
-    assign update_addr = valid ? Y_OUT : C_OUT; 
-    assign update_data = valid ? y_out : C_out_dly;    
-    assign update_valid = valid || valid_dly;
+    assign update_addr = lstm_valid ? Y_OUT : C_OUT; 
+    assign update_data[31 : 16] = '0;
+    assign update_data[15 : 0] = lstm_valid ? y_out : C_out_dly;    
+    assign update_valid = lstm_valid || valid_dly;
 
 endmodule

@@ -5,6 +5,7 @@ import random
 precision = 8
 fullPrecision = 16
 gates = 4
+addressStep = 4
 
 
 def sigmoid(x):
@@ -117,9 +118,44 @@ class LSTM:
 
 
 class LAYERED_LSTM:
-    def __init__(self, layers=1):
+    def __init__(self, layers=1, offset=0):
         self.layers = layers
         self.layer = [LSTM() for layer in range(layers)]
+        self.offset = offset
+        address = self.offset
+        self.weight_x_address = [
+            [(lyr * gates + i) * addressStep + address for i in range(gates)]
+            for lyr in range(self.layers)
+        ]
+        address = self.weight_x_address[-1][-1] + addressStep
+        self.weight_h_address = [
+            [(lyr * gates + i) * addressStep + address for i in range(gates)]
+            for lyr in range(self.layers)
+        ]
+        address = self.weight_h_address[-1][-1] + addressStep
+        self.bias_x_address = [
+            [(lyr * gates + i) * addressStep + address for i in range(gates)]
+            for lyr in range(self.layers)
+        ]
+        address = self.bias_x_address[-1][-1] + addressStep
+        self.bias_h_address = [
+            [(lyr * gates + i) * addressStep + address for i in range(gates)]
+            for lyr in range(self.layers)
+        ]
+        address = self.bias_h_address[-1][-1] + addressStep
+        self.C_prev_address = [
+            address + lyr * addressStep for lyr in range(self.layers)
+        ]
+        address = self.C_prev_address[-1] + addressStep
+        self.h_prev_address = [
+            address + lyr * addressStep for lyr in range(self.layers)
+        ]
+        address = self.h_prev_address[-1] + addressStep
+        self.x_in_address = address
+        address = self.x_in_address + addressStep
+        self.y_out_address = address
+        address = self.y_out_address + addressStep
+        self.C_out_address = address
 
     def rand(self):
         [layer.rand() for layer in self.layer]

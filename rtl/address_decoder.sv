@@ -11,7 +11,7 @@ module address_decoder #(
 
     always_comb begin
         decode_write_enable = '0;
-        for (int i = 0; i < NUM_ADDRESSES - 1; i++) begin
+        for (int i = 0; i < NUM_ADDRESSES; i++) begin
             if (address == OFFSET + i*ADDRESS_STEP) begin
                 decode_write_enable[i] = write_en;
             end
