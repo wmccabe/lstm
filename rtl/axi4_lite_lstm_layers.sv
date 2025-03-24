@@ -32,9 +32,12 @@ module axi4_lite_lstm_layers #(
     output logic [31 : 0] rdata,
     output logic  [1 : 0] rresp,
     output logic          rvalid,
-    input  logic          rready
+    input  logic          rready,
+    
+    output logic          lstm_ready
 );
-    localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (4 * LAYERS) + 1; 
+    localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (4 * LAYERS) + 1;
+    localparam ADDRESS_STEP = 4; 
     logic [31 : 0] write_addr;
     logic          write_en;
     logic [31 : 0] update_addr;
@@ -44,7 +47,7 @@ module axi4_lite_lstm_layers #(
 
     address_decoder #(
         .OFFSET        (0             ),
-        .ADDRESS_STEP  (4             ),
+        .ADDRESS_STEP  (ADDRESS_STEP  ),
         .NUM_ADDRESSES (NUM_ADDRESSES )
     )
     u_address_decoder(
@@ -89,37 +92,66 @@ module axi4_lite_lstm_layers #(
     localparam LSTM_DATA_WIDTH = 16;
 
     logic signed [LAYERS * WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_bias;
+    logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] per_layer_input;
     assign weight_bias = {LAYERS*WEIGHTS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
+    assign per_layer_input = {LAYERS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
+    // lstm layer valid offsets
+    localparam WEIGHT_X = LAYERS * WEIGHTS;
+    localparam WEIGHT_H = LAYERS * WEIGHTS + WEIGHT_X;
+    localparam BIAS_X   = LAYERS * WEIGHTS + WEIGHT_H;
+    localparam BIAS_H   = LAYERS * WEIGHTS + BIAS_H;
+    localparam C_IN     = LAYERS + BIAS_H;
+    localparam H_IN     = LAYERS + C_IN;
+    localparam X_IN     = H_IN + 1;
+
+    localparam Y_OUT = NUM_ADDRESSES*ADDRESS_STEP;
+    localparam C_OUT = Y_OUT + ADDRESS_STEP;  
+
+    logic [15 : 0] y_out;
+    logic [15 : 0] C_out;
+    logic [15 : 0] C_out_dly;
+    logic          valid;
+    logic          valid_dly;
 
     lstm_layers #(
         .LAYERS   (LAYERS),
         .WIDTH    (LSTM_DATA_WIDTH)
     )
     u_lstm_layers(
-        .clk               (clk),
-        .rst               (rst),
+        .clk            (clk),
+        .rst            (rst),
         
         // weights & biases
-        .weight_x          (weight_bias       ),
-        .weight_x_valid    (                  ),
-        .weight_h          (weight_bias       ),
-        .weight_h_valid    (                  ),
-        .bias_x            (weight_bias       ),
-        .bias_x_valid      (                  ),
-        .bias_h            (weight_bias       ),
-        .bias_h_valid      (                  ),
+        .weight_x       (weight_bias                  ),
+        .weight_x_valid (decode_write_enable[WEIGHT_X -: LAYERS * WEIGHTS] ),
+        .weight_h       (weight_bias                                       ),
+        .weight_h_valid (decode_write_enable[WEIGHT_H -: LAYERS * WEIGHTS] ),
+        .bias_x         (weight_bias                                       ),
+        .bias_x_valid   (decode_write_enable[BIAS_X -: LAYERS * WEIGHTS]   ),
+        .bias_h         (weight_bias                                       ),
+        .bias_h_valid   (decode_write_enable[BIAS_H -: LAYERS * WEIGHTS]   ),
         
         // datapath
-        output logic                                        ready,
-        input  logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] C_in,
-        input  logic        [LAYERS - 1 : 0]                C_in_valid,
-        input  logic signed [LAYERS - 1 : 0][WIDTH - 1 : 0] h_in,
-        input  logic        [LAYERS - 1 : 0]                h_in_valid,
-        input  logic signed                 [WIDTH - 1 : 0] x_in,
-        input  logic                                        x_in_valid,
-        output logic signed                 [WIDTH - 1 : 0] y_out,
-        output logic signed                 [WIDTH - 1 : 0] C_out,
-        output logic                                        valid
+        .ready          (lstm_ready                                        ),
+        .C_in           (per_layer_input                                   ),
+        .C_in_valid     (decode_write_enable[C_IN -: LAYERS]               ),
+        .h_in           (per_layer_input                                   ),
+        .h_in_valid     (decode_write_enable[H_IN -: LAYERS]               ),
+        .x_in           (wdata                                             ),
+        .x_in_valid     (decode_write_enable[X_IN]                         ),
+        .y_out          (y_out                                             ),
+        .C_out          (C_out                                             ),
+        .valid          (valid                                             )
     );
+   
+    // delay outputs to update using single port 
+    always_ff @(posedge clk) begin
+        C_out_dly <= C_out;
+        valid_dly <= valid;
+    end
+
+    assign update_addr = valid ? Y_OUT : C_OUT; 
+    assign update_data = valid ? y_out : C_out_dly;    
+    assign update_valid = valid || valid_dly;
 
 endmodule
