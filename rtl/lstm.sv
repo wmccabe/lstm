@@ -39,7 +39,7 @@ module lstm #
     // o - output gate [3]
 
     typedef enum logic [1 : 0] {i, f, g, o} weight_index_t;
-    localparam DLY = 6;
+    localparam DLY = 7;
     localparam logic [3:0] use_sigmoid = 4'b1011;
 
     logic signed [WIDTH - 1 : 0]                  x_in_reg;
@@ -52,6 +52,7 @@ module lstm #
     
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated_dly;
 
     logic signed [WIDTH - 1 : 0] C_out_pre;
     logic signed [WIDTH - 1 : 0] C_out_tanh;
@@ -145,11 +146,12 @@ module lstm #
 
     // assign long term and short term memories
     always_ff @(posedge clk) begin
+        activated_dly <= activated; 
         // long term
-        C_out_pre <= (activated[f]*C_in_reg)/256 + (activated[i]*activated[g])/256;
+        C_out_pre <= (activated_dly[f]*C_in_reg)/256 + (activated_dly[i]*activated_dly[g])/256;
         C_out <= C_out_pre;
         // short term
-        y_out <= (activated[o]*C_out_tanh)/256;
+        y_out <= (activated_dly[o]*C_out_tanh)/256;
         x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid && ready};
     end
 

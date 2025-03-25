@@ -68,7 +68,7 @@ async def test_lstm(dut):
             await cocotb.triggers.RisingEdge(dut.clk)
         await cocotb.start_soon(cocotb_axi.write(dut, pylstms.x_in_address, x_fixed))
 
-    await cocotb.triggers.Timer(100, units="ns")
+    await cocotb.triggers.Timer(200, units="ns")
     await cocotb.triggers.RisingEdge(dut.clk)
 
     # error checking
