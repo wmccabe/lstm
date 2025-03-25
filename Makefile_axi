@@ -4,10 +4,10 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.v
-VERILOG_SOURCES += $(PWD)/rtl/ram_tdp_rf.v
-VERILOG_SOURCES += $(PWD)/rtl/axi_handshake.v
-VERILOG_SOURCES += $(PWD)/rtl/address_decoder.v
+VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.sv
+VERILOG_SOURCES += $(PWD)/rtl/ram_tdp_rf.sv
+VERILOG_SOURCES += $(PWD)/rtl/axi_handshake.sv
+VERILOG_SOURCES += $(PWD)/rtl/address_decoder.sv
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL = axi4_lite_slave
