@@ -34,41 +34,102 @@ module axi4_lite_slave #(
 
     // feed forward address
     output logic [31 : 0] write_addr,
+    output logic [31 : 0] write_data,
     output logic          write_en,
     input  logic [31 : 0] update_addr,
     input  logic [31 : 0] update_data,
     input  logic          update_valid
 );
 
-    
     // write address logic
     logic [31 : 0] write_addr_reg;
-    
-    assign awready    = !rst;
-    assign write_addr = (awvalid && awready) ? awaddr : write_addr_reg;
-    assign write_en = wvalid && wready;
+    logic [31 : 0] write_data_reg;
+     
     assign bresp = 2'b00;
  
-    always_ff @(posedge clk) begin
-        if (awready && awvalid) begin
-            write_addr_reg <= awaddr;
+    typedef enum {IDLE, WAIT_ADDR, WAIT_DATA, SEND_ACK} write_state_t;
+    write_state_t write_state;
+    
+    assign awready = (!rst) && (write_state inside {IDLE, WAIT_ADDR}); 
+    assign wready = (!rst) && (write_state inside {IDLE, WAIT_DATA});
+
+    assign write_addr = awvalid ? awaddr : write_addr_reg;
+    assign write_data = wvalid ? wdata : write_data_reg;
+
+    always_comb begin
+        if (rst) begin
+            write_en = 1'b0;
+        end
+        else begin
+            unique case (write_state)
+                IDLE:      write_en = awvalid && wvalid;
+                WAIT_ADDR: write_en = awvalid;
+                WAIT_DATA: write_en = wvalid;
+                default:   write_en = 1'b0;
+            endcase
         end
     end
-    
-    // write data logic
-    logic write_state;
-    assign wready = !rst && (write_state == 1'b0);
-   
-    axi_handshake 
-    u_write_handshake (
-        .clk      (clk        ),
-        .rst      (rst        ),
-        .m_valid  (wvalid     ),
-        .s_valid  (bvalid     ),
-        .m_ready  (bready     ),
-        .state    (write_state)
-    );
- 
+     
+    always_ff @(posedge clk) begin
+        if (awvalid) begin
+            write_addr_reg <= awaddr;
+        end
+        if (wvalid) begin
+            write_data_reg <= wdata;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            write_state <= IDLE;
+            bvalid <= 1'b0;
+        end
+        else begin
+            unique case (write_state)
+                IDLE: begin
+                    if (awvalid && wvalid) begin
+                        write_state <= SEND_ACK;
+                        bvalid <= 1'b1;
+                    end
+                    else if (awvalid) begin
+                        write_state <= WAIT_DATA;
+                        bvalid <= 1'b0;
+                    end
+                    else if (wvalid) begin
+                        write_state <= WAIT_ADDR;
+                        bvalid <= 1'b0;
+                    end
+                    else begin
+                        write_state <= IDLE;
+                        bvalid <= 1'b0;
+                    end
+                end
+                WAIT_DATA: begin
+                    if (wvalid) begin
+                        write_state <= SEND_ACK;
+                        bvalid <= 1'b1;
+                    end
+                end
+                WAIT_ADDR: begin
+                    if (awvalid) begin
+                        write_state <= SEND_ACK;
+                        bvalid <= 1'b1;
+                    end
+                end
+                SEND_ACK: begin
+                    if (bready) begin
+                        bvalid <= 1'b0;
+                        write_state <= IDLE;
+                    end
+                end
+                default: begin
+                    write_state <= IDLE;
+                    bvalid <= 1'b0;
+                end
+            endcase
+        end
+    end
+             
     // read data logic
     logic read_state;
     logic [31 : 0] read_addr;
@@ -113,7 +174,7 @@ module axi4_lite_slave #(
         .web   (update_valid                    ),
         .addra (write_addr[ADDR_WIDTH - 1 : 0]  ),
         .addrb (addrb                           ),
-        .dia   (wdata                           ),
+        .dia   (write_data                      ),
         .dib   (update_data                     ),
         .doa   (                                ),
         .dob   (rdata                           )

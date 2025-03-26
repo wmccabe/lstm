@@ -40,6 +40,7 @@ module axi4_lite_lstm_layers #(
     localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
     logic [31 : 0] write_addr;
+    logic [31 : 0] write_data;
     logic          write_en;
     logic [31 : 0] update_addr;
     logic [31 : 0] update_data;
@@ -84,6 +85,7 @@ module axi4_lite_lstm_layers #(
         .rvalid       (rvalid       ),
         .rready       (rready       ),
         .write_addr   (write_addr   ),
+        .write_data   (write_data   ),
         .write_en     (write_en     ),
         .update_addr  (update_addr  ),
         .update_data  (update_data  ),
@@ -94,8 +96,8 @@ module axi4_lite_lstm_layers #(
 
     logic signed [LAYERS * WEIGHTS - 1 : 0][LSTM_DATA_WIDTH - 1 : 0] weight_bias;
     logic signed [LAYERS - 1 : 0][LSTM_DATA_WIDTH - 1 : 0] per_layer_input;
-    assign weight_bias = {LAYERS*WEIGHTS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
-    assign per_layer_input = {LAYERS{wdata[LSTM_DATA_WIDTH - 1 : 0]}};
+    assign weight_bias = {LAYERS*WEIGHTS{write_data[LSTM_DATA_WIDTH - 1 : 0]}};
+    assign per_layer_input = {LAYERS{write_data[LSTM_DATA_WIDTH - 1 : 0]}};
     // lstm layer valid offsets
     localparam WEIGHT_X = 0;
     localparam WEIGHT_H = LAYERS * WEIGHTS + WEIGHT_X;
@@ -137,7 +139,7 @@ module axi4_lite_lstm_layers #(
         .C_in_valid     (decode_write_enable[C_IN +: LAYERS]               ),
         .h_in           (per_layer_input                                   ),
         .h_in_valid     (decode_write_enable[H_IN +: LAYERS]               ),
-        .x_in           (wdata[LSTM_DATA_WIDTH - 1 : 0]                    ),
+        .x_in           (write_data[LSTM_DATA_WIDTH - 1 : 0]               ),
         .x_in_valid     (decode_write_enable[X_IN]                         ),
         .y_out          (y_out                                             ),
         .C_out          (C_out                                             ),

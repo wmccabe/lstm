@@ -85,7 +85,7 @@ async def test_lstm(dut):
     )
     if verbose:
         print("--------------------")
-        print(x)
+        print(lstm.createFixedPoint(x, lstm.precision))
         print(
             f"{floating_point_error:.5f} = |{lstm.floatingPoint(int(y_out), lstm.precision):.5f} - {pylstms.layer[dut.LAYERS.value - 1].h_prev}|"
         )
