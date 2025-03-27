@@ -32,7 +32,9 @@ module axi4_lite_lstm_layers #(
     output logic [31 : 0] rdata,
     output logic  [1 : 0] rresp,
     output logic          rvalid,
-    input  logic          rready
+    input  logic          rready,
+    output logic [15 : 0] y_out,
+    output logic          y_out_valid
 );
     localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
@@ -110,7 +112,6 @@ module axi4_lite_lstm_layers #(
     localparam Y_OUT = NUM_ADDRESSES*ADDRESS_STEP;
     localparam C_OUT = Y_OUT + ADDRESS_STEP;  
 
-    logic [15 : 0] y_out;
     logic [15 : 0] C_out;
     logic [15 : 0] C_out_dly;
     logic          valid_dly;
@@ -145,6 +146,8 @@ module axi4_lite_lstm_layers #(
         .C_out          (C_out                                             ),
         .valid          (lstm_valid                                        )
     );
+    
+    assign y_out_valid = lstm_valid;
    
     // delay outputs to update using single port 
     always_ff @(posedge clk) begin

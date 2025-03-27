@@ -63,9 +63,9 @@ module axi4_lite_slave #(
         end
         else begin
             unique case (write_state)
-                IDLE:      write_en = awvalid && wvalid;
-                WAIT_ADDR: write_en = awvalid;
-                WAIT_DATA: write_en = wvalid;
+                IDLE:      write_en = user_ready && awvalid && wvalid;
+                WAIT_ADDR: write_en = user_ready && awvalid;
+                WAIT_DATA: write_en = user_ready && wvalid;
                 default:   write_en = 1'b0;
             endcase
         end
