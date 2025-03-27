@@ -11,7 +11,7 @@ async def send_write_address(dut, address):
     if dut.awready.value:
         dut.awvalid.value = 0
     else:
-        await cocotb.triggers.RisingEdge(dut.awready.value)
+        await cocotb.triggers.RisingEdge(dut.awready)
         await cocotb.triggers.RisingEdge(dut.clk)
         dut.awvalid.value = 0
 
@@ -23,7 +23,7 @@ async def send_write_data(dut, data):
     if dut.wready.value:
         dut.wvalid.value = 0
     else:
-        await cocotb.triggers.RisingEdge(dut.wready.value)
+        await cocotb.triggers.RisingEdge(dut.wready)
         await cocotb.triggers.RisingEdge(dut.clk)
         dut.wvalid.value = 0
 
@@ -34,7 +34,7 @@ async def write(dut, address, data):
     if verbose:
         print(f"Writing {data} -> {address}")
 
-    # randomize if write or data is sent first
+    # randomize if write address or data is sent first
     random_path = random.randint(0, 2)
     if random_path == 0:
         cocotb.start_soon(send_write_address(dut, address))

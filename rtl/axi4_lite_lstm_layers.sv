@@ -32,16 +32,15 @@ module axi4_lite_lstm_layers #(
     output logic [31 : 0] rdata,
     output logic  [1 : 0] rresp,
     output logic          rvalid,
-    input  logic          rready,
-    
-    output logic          lstm_ready,
-    output logic          lstm_valid
+    input  logic          rready
 );
     localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
     logic [31 : 0] write_addr;
     logic [31 : 0] write_data;
     logic          write_en;
+    logic          lstm_ready;
+    logic          lstm_valid;
     logic [31 : 0] update_addr;
     logic [31 : 0] update_data;
     logic          update_valid;
@@ -84,6 +83,7 @@ module axi4_lite_lstm_layers #(
         .rresp        (rresp        ),
         .rvalid       (rvalid       ),
         .rready       (rready       ),
+        .user_ready   (lstm_ready   ),
         .write_addr   (write_addr   ),
         .write_data   (write_data   ),
         .write_en     (write_en     ),

@@ -32,10 +32,7 @@ module axi4_lite_lstm_layers_wrapper #(
     output  [31 : 0] rdata,
     output   [1 : 0] rresp,
     output           rvalid,
-    input            rready,
-    
-    output           lstm_ready,
-    output           lstm_valid
+    input            rready
 );
 
     axi4_lite_lstm_layers #(
@@ -63,9 +60,7 @@ module axi4_lite_lstm_layers_wrapper #(
         .rdata      (rdata      ),
         .rresp      (rresp      ),
         .rvalid     (rvalid     ),
-        .rready     (rready     ),
-        .lstm_ready (lstm_ready ),
-        .lstm_valid (lstm_valid )
+        .rready     (rready     )
     );
 
 endmodule

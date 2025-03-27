@@ -15,8 +15,6 @@ Epsilon = 0.1
 
 async def test_lstm(dut):
     """Pass in the device under test and the python model, randomize inputs and check outputs"""
-    while dut.lstm_ready.value != 1:
-        await cocotb.triggers.RisingEdge(dut.clk)
 
     pylstms = LAYERED_LSTM(dut.LAYERS.value)
     pylstms.rand()
@@ -64,8 +62,6 @@ async def test_lstm(dut):
     pylstms.process(x)
     for xi in x:
         x_fixed = lstm.createFixedPoint(xi, lstm.precision)
-        while not dut.lstm_ready.value:
-            await cocotb.triggers.RisingEdge(dut.clk)
         await cocotb.start_soon(cocotb_axi.write(dut, pylstms.x_in_address, x_fixed))
 
     await cocotb.triggers.Timer(200, units="ns")
@@ -106,7 +102,5 @@ async def lstm_test_suite(dut):
     dut.rst.value = 0
     for _ in range(10):
         await cocotb.triggers.RisingEdge(dut.clk)
-        while dut.lstm_ready.value != 1:
-            await cocotb.triggers.RisingEdge(dut.clk)
         await cocotb.start_soon(test_lstm(dut))
         await cocotb.triggers.RisingEdge(dut.clk)

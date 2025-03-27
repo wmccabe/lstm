@@ -6,6 +6,10 @@ from cocotb.clock import Clock
 import cocotb_axi
 import random
 
+async def randomize_user_ready(dut):
+    while True:
+        await cocotb.triggers.RisingEdge(dut.clk)
+        dut.user_ready.value = random.randint(0,1)
 
 async def test_axi_lite(dut):
     addresses_data = [
@@ -34,4 +38,5 @@ async def axi_test_suite(dut):
     await cocotb.start(cocotb.clock.Clock(dut.clk, 4, "ns").start())
     await cocotb.triggers.Timer(15, units="ns")  # wait a bit
     dut.rst.value = 0
+    cocotb.start_soon(randomize_user_ready(dut))
     await cocotb.start_soon(test_axi_lite(dut))

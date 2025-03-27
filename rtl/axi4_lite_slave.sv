@@ -32,7 +32,8 @@ module axi4_lite_slave #(
     output logic          rvalid,
     input  logic          rready,
 
-    // feed forward address
+    // User logic interface
+    input  logic          user_ready,
     output logic [31 : 0] write_addr,
     output logic [31 : 0] write_data,
     output logic          write_en,
@@ -50,8 +51,8 @@ module axi4_lite_slave #(
     typedef enum {IDLE, WAIT_ADDR, WAIT_DATA, SEND_ACK} write_state_t;
     write_state_t write_state;
     
-    assign awready = (!rst) && (write_state inside {IDLE, WAIT_ADDR}); 
-    assign wready = (!rst) && (write_state inside {IDLE, WAIT_DATA});
+    assign awready = (!rst) && user_ready && (write_state inside {IDLE, WAIT_ADDR}); 
+    assign wready = (!rst) && user_ready && (write_state inside {IDLE, WAIT_DATA});
 
     assign write_addr = awvalid ? awaddr : write_addr_reg;
     assign write_data = wvalid ? wdata : write_data_reg;
@@ -87,15 +88,15 @@ module axi4_lite_slave #(
         else begin
             unique case (write_state)
                 IDLE: begin
-                    if (awvalid && wvalid) begin
+                    if (awvalid && wvalid && user_ready) begin
                         write_state <= SEND_ACK;
                         bvalid <= 1'b1;
                     end
-                    else if (awvalid) begin
+                    else if (awvalid && user_ready) begin
                         write_state <= WAIT_DATA;
                         bvalid <= 1'b0;
                     end
-                    else if (wvalid) begin
+                    else if (wvalid && user_ready) begin
                         write_state <= WAIT_ADDR;
                         bvalid <= 1'b0;
                     end
@@ -105,13 +106,13 @@ module axi4_lite_slave #(
                     end
                 end
                 WAIT_DATA: begin
-                    if (wvalid) begin
+                    if (wvalid && user_ready) begin
                         write_state <= SEND_ACK;
                         bvalid <= 1'b1;
                     end
                 end
                 WAIT_ADDR: begin
-                    if (awvalid) begin
+                    if (awvalid && user_ready) begin
                         write_state <= SEND_ACK;
                         bvalid <= 1'b1;
                     end
