@@ -1,3 +1,5 @@
+import version_package::*;
+
 module axi4_lite_lstm_layers #(
     parameter WIDTH = 32,
     parameter DEPTH = 512,
@@ -110,7 +112,8 @@ module axi4_lite_lstm_layers #(
     localparam X_IN     = LAYERS + H_IN;
 
     localparam Y_OUT = NUM_ADDRESSES*ADDRESS_STEP;
-    localparam C_OUT = Y_OUT + ADDRESS_STEP;  
+    localparam C_OUT = Y_OUT + ADDRESS_STEP;
+    localparam VERSION = C_OUT + ADDRESS_STEP; 
 
     logic [15 : 0] C_out;
     logic [15 : 0] C_out_dly;
@@ -155,9 +158,17 @@ module axi4_lite_lstm_layers #(
         valid_dly <= lstm_valid;
     end
 
-    assign update_addr = lstm_valid ? Y_OUT : C_OUT; 
-    assign update_data[31 : 16] = '0;
-    assign update_data[15 : 0] = lstm_valid ? y_out : C_out_dly;    
-    assign update_valid = lstm_valid || valid_dly;
+    logic write_version;
+    logic rst_dly;
+    // add versioning
+    always_ff @(posedge clk) begin
+        rst_dly <= rst;
+        write_version <= rst_dly && !rst;
+    end
+
+    
+    assign update_addr = write_version ? VERSION: lstm_valid ? Y_OUT : C_OUT; 
+    assign update_data = write_version ? VERSION_REGISTER : lstm_valid ? {16'h0000, y_out} : {16'h0000, C_out_dly}; 
+    assign update_valid = write_version || lstm_valid || valid_dly;
 
 endmodule

@@ -4,6 +4,7 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
+VERILOG_SOURCES += $(PWD)/rtl/version_package.sv
 VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_lstm_layers_wrapper.v
 VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_lstm_layers.sv
 VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.sv
