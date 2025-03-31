@@ -156,6 +156,8 @@ class LAYERED_LSTM:
         self.y_out_address = address
         address = self.y_out_address + addressStep
         self.C_out_address = address
+        address = self.C_out_address + addressStep
+        self.version_address = address
 
     def rand(self):
         [layer.rand() for layer in self.layer]
