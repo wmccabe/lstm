@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import              struct
+import struct
 import time
 import sys
 import argparse
