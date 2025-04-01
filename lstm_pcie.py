@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import struct
+import              struct
 import time
 import sys
 import argparse
@@ -142,7 +142,7 @@ def main():
     print("Found product ID %s version %d" % (pid_string, pvrsn))
 
     # read / write to gpio bits
-    gpio_led            = 0x2008
+    gpio_led = 0x2008
     read_data = int.from_bytes(os.pread(fd, 4, gpio_led), byteorder="little")
     print("GPIO LED: %x" % read_data)
     write_data = 0xCAFEF00D
