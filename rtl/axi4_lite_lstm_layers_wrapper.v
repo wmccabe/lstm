@@ -34,7 +34,9 @@ module axi4_lite_lstm_layers_wrapper #(
     output           rvalid,
     input            rready,
     output  [15 : 0] y_out,
-    output           y_out_valid 
+    output           y_out_valid,
+    output signed [LAYERS*WEIGHTS - 1 : 0][15 : 0] scaled,
+    output signed [LAYERS - 1 : 0]                 scaled_valid
 );
 
     axi4_lite_lstm_layers #(
@@ -64,7 +66,9 @@ module axi4_lite_lstm_layers_wrapper #(
         .rvalid     (rvalid     ),
         .rready     (rready     ),
         .y_out      (y_out      ),
-        .y_out_valid (y_out_valid      )
+        .y_out_valid (y_out_valid      ),
+        .scaled     (scaled     ),
+        .scaled_valid (scaled_valid     )
     );
 
 endmodule

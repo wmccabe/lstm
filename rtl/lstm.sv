@@ -29,7 +29,9 @@ module lstm #
     input  logic                        x_in_valid,
     output logic signed [WIDTH - 1 : 0] y_out,
     output logic signed [WIDTH - 1 : 0] C_out,
-    output logic                        valid
+    output logic                        valid,
+    output logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled,
+    output logic signed                                  scaled_valid
 );
 
     // Enums correspond to different logic paths in the LSTM
@@ -50,9 +52,11 @@ module lstm #
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x_reg;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h_reg;
     
-    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
+    // logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
+    // logic signed                                  scaled_valid;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated_dly;
+    logic signed                                  activated_dly_valid;
 
     logic signed [WIDTH - 1 : 0] C_out_pre;
     logic signed [WIDTH - 1 : 0] C_out_tanh;
@@ -157,6 +161,8 @@ module lstm #
 
     assign valid = x_in_valid_dly[DLY-1];
     assign ready = !(|x_in_valid_dly); 
+    assign scaled_valid = x_in_valid_dly[1];
+    assign activated_dly_valid = x_in_valid_dly[2];
     
     
     function_lookup #(
