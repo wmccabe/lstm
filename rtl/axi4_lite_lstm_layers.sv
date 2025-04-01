@@ -159,17 +159,17 @@ module axi4_lite_lstm_layers #(
     end
 
     logic write_version;
-    logic rst_dly;
+    logic [15 : 0] rst_dly;
 
     // add versioning
     always_ff @(posedge clk) begin
         if (rst) begin
             write_version <= 1'b0;
-            rst_dly <= 1'b1;
+            rst_dly <= '1;
         end
         else begin
-            rst_dly <= rst;
-            write_version <= rst_dly && !rst;
+            rst_dly <= {rst_dly[14:0], rst};
+            write_version <= (rst_dly == 16'h8000);
         end
     end
     
