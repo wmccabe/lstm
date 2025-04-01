@@ -6,10 +6,12 @@ from cocotb.clock import Clock
 import cocotb_axi
 import random
 
+
 async def randomize_user_ready(dut):
     while True:
         await cocotb.triggers.RisingEdge(dut.clk)
-        dut.user_ready.value = random.randint(0,1)
+        dut.user_ready.value = random.randint(0, 1)
+
 
 async def test_axi_lite(dut):
     addresses_data = [

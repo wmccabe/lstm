@@ -19,10 +19,12 @@ async def test_lstm(dut):
     pylstms = LAYERED_LSTM(dut.LAYERS.value)
     pylstms.rand()
     await cocotb.triggers.RisingEdge(dut.clk)
-    version_register = await cocotb.start_soon(cocotb_axi.read(dut, pylstms.version_address))
+    version_register = await cocotb.start_soon(
+        cocotb_axi.read(dut, pylstms.version_address)
+    )
     ver_dec = []
     for i in range(4):
-        ver_dec.append(version_register & 0xff)
+        ver_dec.append(version_register & 0xFF)
         version_register >>= 8
     print(f"ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}")
     for lyr in range(dut.LAYERS.value):

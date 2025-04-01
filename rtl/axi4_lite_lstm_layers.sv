@@ -160,12 +160,18 @@ module axi4_lite_lstm_layers #(
 
     logic write_version;
     logic rst_dly;
+
     // add versioning
     always_ff @(posedge clk) begin
-        rst_dly <= rst;
-        write_version <= rst_dly && !rst;
+        if (rst) begin
+            write_version <= 1'b0;
+            rst_dly <= 1'b1;
+        end
+        else begin
+            rst_dly <= rst;
+            write_version <= rst_dly && !rst;
+        end
     end
-
     
     assign update_addr = write_version ? VERSION: lstm_valid ? Y_OUT : C_OUT; 
     assign update_data = write_version ? VERSION_REGISTER : lstm_valid ? {16'h0000, y_out} : {16'h0000, C_out_dly}; 
