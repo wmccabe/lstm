@@ -10,6 +10,8 @@ import lstm
 
 ##############################################
 
+layers = 1
+
 
 class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
     def write_config(self, fd):
@@ -115,13 +117,13 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
 
         time.sleep(0.1)
         C_out_hw_fixed = int.from_bytes(
-            os.pread(fd, 8, self.C_out_address), byteorder="little"
+            os.pread(fd, 4, self.C_out_address), byteorder="little"
         )
         print(
             f"C out Model result {self.layer[-1].fixed_C_prev:x}, hardware: {C_out_hw_fixed:x}"
         )
         y_out_hw_fixed = int.from_bytes(
-            os.pread(fd, 8, self.y_out_address), byteorder="little"
+            os.pread(fd, 4, self.y_out_address), byteorder="little"
         )
         print(f"{y_out_hw_fixed:#x}")
         y_out_hw = lstm.floatingPoint(y_out_hw_fixed, lstm.precision)
@@ -158,9 +160,12 @@ def main():
     read_data = int.from_bytes(os.pread(fd, 4, axi_lstm_address), byteorder="little")
     print(f"written: {write_data: x}; read: {read_data: x}")
 
-    lstmHW = LAYERED_LSTM_HARDWARE(layers=4, offset=0x6000)
+    lstmHW = LAYERED_LSTM_HARDWARE(layers=layers, offset=0x6000)
     ver_dec = []
-    version_register = int.from_bytes(os.pread(fd, 4, lstmHW.version_address))
+    version_register = int.from_bytes(
+        os.pread(fd, 4, lstmHW.version_address), byteorder="little"
+    )
+    print(f"version_register = {version_register:#x}")
     for i in range(4):
         ver_dec.append(version_register & 0xFF)
         version_register >>= 8
