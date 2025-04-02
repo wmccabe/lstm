@@ -63,8 +63,6 @@ module lstm #
 
     logic [DLY - 1 : 0] x_in_valid_dly;
 
-    assign debug = scaled;
-    assign debug_valid = scaled_valid;
 
     // register weights and biases
     always_ff @(posedge clk) begin
@@ -113,6 +111,8 @@ module lstm #
         end
     end
         
+    assign debug = {product_x[0][15:0], product_h[0][15:0], rescale_x[0][15:0], rescale_h[0][15:0]};
+    assign debug_valid = scaled_valid;
 
     // implement weighting and scaling
     always_ff @(posedge clk) begin
