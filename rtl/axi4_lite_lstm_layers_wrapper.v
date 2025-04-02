@@ -35,7 +35,10 @@ module axi4_lite_lstm_layers_wrapper #(
     input            rready,
     output  [15 : 0] y_out,
     output           y_out_valid,
-    output signed [LAYERS*WEIGHTS - 1 : 0][15 : 0] scaled,
+    output signed [15 : 0]       scaled_0,
+    output signed [15 : 0]       scaled_1,
+    output signed [15 : 0]       scaled_2,
+    output signed [15 : 0]       scaled_3,
     output signed [LAYERS - 1 : 0]                 scaled_valid
 );
 
@@ -67,7 +70,7 @@ module axi4_lite_lstm_layers_wrapper #(
         .rready     (rready     ),
         .y_out      (y_out      ),
         .y_out_valid (y_out_valid      ),
-        .scaled     (scaled     ),
+        .scaled      ({scaled_3, scaled_2, scaled_1, scaled_0} ),
         .scaled_valid (scaled_valid     )
     );
 

@@ -100,7 +100,7 @@ module lstm #
     // implement weighting and scaling
     always_ff @(posedge clk) begin
         for(int j = 0; j < WEIGHTS; j = j + 1) begin 
-            scaled[j] = (x_in_reg*weight_x_reg[j])/256 + (h_in_reg*weight_h_reg[j])/256 + bias_x_reg[j] + bias_h_reg[j];
+            scaled[j] <= (x_in_reg*weight_x_reg[j])/256 + (h_in_reg*weight_h_reg[j])/256 + bias_x_reg[j] + bias_h_reg[j];
         end
     end
 
