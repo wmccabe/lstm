@@ -30,8 +30,8 @@ module lstm #
     output logic signed [WIDTH - 1 : 0] y_out,
     output logic signed [WIDTH - 1 : 0] C_out,
     output logic                        valid,
-    output logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled,
-    output logic signed                                  scaled_valid
+    output logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] debug,
+    output logic signed                                  debug_valid
 );
 
     // Enums correspond to different logic paths in the LSTM
@@ -52,8 +52,8 @@ module lstm #
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x_reg;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h_reg;
     
-    // logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
-    // logic signed                                  scaled_valid;
+    logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
+    logic signed                                  scaled_valid;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated_dly;
     logic signed                                  activated_dly_valid;
@@ -62,6 +62,9 @@ module lstm #
     logic signed [WIDTH - 1 : 0] C_out_tanh;
 
     logic [DLY - 1 : 0] x_in_valid_dly;
+
+    assign debug = weight_x_reg;
+    assign debug_valid = scaled_valid;
 
     // register weights and biases
     always_ff @(posedge clk) begin

@@ -37,8 +37,8 @@ module axi4_lite_lstm_layers #(
     input  logic          rready,
     output logic [15 : 0] y_out,
     output logic          y_out_valid,
-    output logic signed [LAYERS*WEIGHTS - 1 : 0][15 : 0] scaled,
-    output logic signed [LAYERS-1 : 0]                   scaled_valid
+    output logic signed [LAYERS*WEIGHTS - 1 : 0][15 : 0] debug,
+    output logic signed [LAYERS-1 : 0]                   debug_valid
  );
     localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
@@ -150,8 +150,8 @@ module axi4_lite_lstm_layers #(
         .y_out          (y_out                                             ),
         .C_out          (C_out                                             ),
         .valid          (lstm_valid                                        ),
-        .scaled         (scaled                                            ),
-        .scaled_valid   (scaled_valid                                      )
+        .debug         (debug                                            ),
+        .debug_valid   (debug_valid                                      )
      );
     
     assign y_out_valid = lstm_valid;

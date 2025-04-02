@@ -25,6 +25,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 os.pwrite(
                     fd, write_data.to_bytes(read_write_size, "little"), write_addr
                 )
+                print(f"Wx {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.weight_h_address[lyr][gate],
                     self.layer[lyr].fixed_Wh[gate],
@@ -32,6 +33,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 os.pwrite(
                     fd, write_data.to_bytes(read_write_size, "little"), write_addr
                 )
+                print(f"Wh {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.bias_x_address[lyr][gate],
                     self.layer[lyr].fixed_bx[gate],
@@ -39,6 +41,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 os.pwrite(
                     fd, write_data.to_bytes(read_write_size, "little"), write_addr
                 )
+                print(f"bx {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.bias_h_address[lyr][gate],
                     self.layer[lyr].fixed_bh[gate],
@@ -46,18 +49,21 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 os.pwrite(
                     fd, write_data.to_bytes(read_write_size, "little"), write_addr
                 )
+                print(f"bh {write_data} -> {write_addr:x}")
 
             write_addr, write_data = (
                 self.C_prev_address[lyr],
                 self.layer[lyr].fixed_C_prev,
             )
             os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), write_addr)
+            print(f"C_prev {write_data} -> {write_addr:x}")
 
             write_addr, write_data = (
                 self.h_prev_address[lyr],
                 self.layer[lyr].fixed_h_prev,
             )
             os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), write_addr)
+            print(f"h_prev {write_data} -> {write_addr:x}")
 
     def read_config(self, fd):
         for lyr in range(self.layers):
@@ -157,29 +163,6 @@ def main():
     pvrsn = int.from_bytes(os.pread(fd, read_write_size, 0x8), byteorder="little")
 
     print("Found product ID %s version %d" % (pid_string, pvrsn))
-
-    # read / write to gpio bits
-    gpio_led = 0x2008
-    read_data = int.from_bytes(
-        os.pread(fd, read_write_size, gpio_led), byteorder="little"
-    )
-    print("GPIO LED: %x" % read_data)
-    write_data = 0xCAFEF00D
-    write_bytes = write_data.to_bytes(read_write_size, "little")
-    os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), gpio_led)
-    read_data = int.from_bytes(
-        os.pread(fd, read_write_size, gpio_led), byteorder="little"
-    )
-    print("GPIO LED: %x" % read_data)
-
-    axi_lstm_address = 0x0000_6020
-    write_data = 0xCAFEBABE
-    write_bytes = write_data.to_bytes(read_write_size, "little")
-    os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), axi_lstm_address)
-    read_data = int.from_bytes(
-        os.pread(fd, read_write_size, axi_lstm_address), byteorder="little"
-    )
-    print(f"written: {write_data: x}; read: {read_data: x}")
 
     lstmHW = LAYERED_LSTM_HARDWARE(layers=layers, offset=0x6000)
     ver_dec = []

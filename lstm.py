@@ -87,6 +87,8 @@ class LSTM:
         self.C_prev = random.uniform(min, max)
         self.h_prev = random.uniform(min, max)
         self.updateFixed()
+        print(f"Wx fixed: {self.fixed_Wx}")
+        print(f"Wh fixed: {self.fixed_Wh}")
 
     def process(self, X):
         useSigmoid = [True, True, False, True]
@@ -102,6 +104,7 @@ class LSTM:
                     activated[i] = sigmoid(scaled[i])
                 else:
                     activated[i] = math.tanh(scaled[i])
+            print(createFixedPoint(scaled, precision))
             # long term
             C_t = (
                 activated[Index.f.value] * self.C_prev
