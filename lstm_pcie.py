@@ -16,6 +16,9 @@ read_write_size = 4
 
 class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
     def write_config(self, fd):
+        print(f"fixed_h_prev: {self.layer[0].fixed_h_prev}")
+        print(f"fixed_bx: {self.layer[0].fixed_bx}")
+        print(f"fixed_bh: {self.layer[0].fixed_bh}")
         for lyr in range(self.layers):
             for gate in range(lstm.gates):
                 write_addr, write_data = (
@@ -23,47 +26,41 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                     self.layer[lyr].fixed_Wx[gate],
                 )
                 os.pwrite(
-                    fd, write_data.to_bytes(read_write_size, "little"), write_addr
+                    fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr
                 )
-                print(f"Wx {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.weight_h_address[lyr][gate],
                     self.layer[lyr].fixed_Wh[gate],
                 )
                 os.pwrite(
-                    fd, write_data.to_bytes(read_write_size, "little"), write_addr
+                    fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr
                 )
-                print(f"Wh {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.bias_x_address[lyr][gate],
                     self.layer[lyr].fixed_bx[gate],
                 )
                 os.pwrite(
-                    fd, write_data.to_bytes(read_write_size, "little"), write_addr
+                    fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr
                 )
-                print(f"bx {write_data} -> {write_addr:x}")
                 write_addr, write_data = (
                     self.bias_h_address[lyr][gate],
                     self.layer[lyr].fixed_bh[gate],
                 )
                 os.pwrite(
-                    fd, write_data.to_bytes(read_write_size, "little"), write_addr
+                    fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr
                 )
-                print(f"bh {write_data} -> {write_addr:x}")
 
             write_addr, write_data = (
                 self.C_prev_address[lyr],
                 self.layer[lyr].fixed_C_prev,
             )
-            os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), write_addr)
-            print(f"C_prev {write_data} -> {write_addr:x}")
+            os.pwrite(fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr)
 
             write_addr, write_data = (
                 self.h_prev_address[lyr],
                 self.layer[lyr].fixed_h_prev,
             )
-            os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), write_addr)
-            print(f"h_prev {write_data} -> {write_addr:x}")
+            os.pwrite(fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr)
 
     def read_config(self, fd):
         for lyr in range(self.layers):
@@ -73,7 +70,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                     self.layer[lyr].fixed_Wx[gate],
                 )
                 read_data = int.from_bytes(
-                    os.pread(fd, read_write_size, read_addr), byteorder="little"
+                    os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
                 )
                 assert expected_data == read_data
 
@@ -82,7 +79,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                     self.layer[lyr].fixed_Wh[gate],
                 )
                 read_data = int.from_bytes(
-                    os.pread(fd, read_write_size, read_addr), byteorder="little"
+                    os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
                 )
                 assert expected_data == read_data
 
@@ -91,7 +88,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                     self.layer[lyr].fixed_bx[gate],
                 )
                 read_data = int.from_bytes(
-                    os.pread(fd, read_write_size, read_addr), byteorder="little"
+                    os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
                 )
                 assert expected_data == read_data
 
@@ -100,7 +97,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                     self.layer[lyr].fixed_bh[gate],
                 )
                 read_data = int.from_bytes(
-                    os.pread(fd, read_write_size, read_addr), byteorder="little"
+                    os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
                 )
                 assert expected_data == read_data
 
@@ -109,7 +106,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 self.layer[lyr].fixed_C_prev,
             )
             read_data = int.from_bytes(
-                os.pread(fd, read_write_size, read_addr), byteorder="little"
+                os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
             )
             assert expected_data == read_data
 
@@ -118,33 +115,34 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
                 self.layer[lyr].fixed_h_prev,
             )
             read_data = int.from_bytes(
-                os.pread(fd, read_write_size, read_addr), byteorder="little"
+                os.pread(fd, read_write_size, read_addr), byteorder="little", signed=True
             )
             assert expected_data == read_data
 
     def process_hw(self, fd, x):
-        self.process(x)
         for xi in x:
+            # print(f"x_in: {lstm.fixedPoint(xi, lstm.precision)};  h_prev: {self.layer[0].fixed_h_prev}; bx[0]: {self.layer[0].fixed_bx[0]}; bh[0]: {self.layer[0].fixed_bh[0]}")
             write_addr, write_data = self.x_in_address, lstm.fixedPoint(
                 xi, lstm.precision
             )
             print(f"write_addr: {write_addr:#x}, write_data: {write_data:#x}")
-            os.pwrite(fd, write_data.to_bytes(read_write_size, "little"), write_addr)
+            os.pwrite(fd, write_data.to_bytes(read_write_size, "little", signed=True), write_addr)
             read_data = int.from_bytes(
-                os.pread(fd, read_write_size, write_addr), byteorder="little"
+                os.pread(fd, read_write_size, write_addr), byteorder="little", signed=True
             )
             assert write_data == read_data
             time.sleep(0.1)
 
+        self.process(x)
         time.sleep(0.1)
         C_out_hw_fixed = int.from_bytes(
-            os.pread(fd, read_write_size, self.C_out_address), byteorder="little"
+            os.pread(fd, read_write_size, self.C_out_address), byteorder="little", signed=True
         )
         print(
             f"C out Model result {self.layer[-1].fixed_C_prev:x}, hardware: {C_out_hw_fixed:x}"
         )
         y_out_hw_fixed = int.from_bytes(
-            os.pread(fd, read_write_size, self.y_out_address), byteorder="little"
+            os.pread(fd, read_write_size, self.y_out_address), byteorder="little", signed=True
         )
         print(f"{y_out_hw_fixed:#x}")
         y_out_hw = lstm.floatingPoint(y_out_hw_fixed, lstm.precision)

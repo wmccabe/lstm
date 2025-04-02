@@ -43,12 +43,7 @@ def floatingPoint(fixed_x, precision):
 
 def fixedPoint(floating_x, precision):
     x = round_precision(floating_x, precision)
-    if x < 0:
-        # two's compliment
-        magnitude = round(abs(x) * 2**precision)
-        return int(2**fullPrecision - magnitude)
-    else:
-        return round(x * 2**precision)
+    return round(x * 2**precision)
 
 
 def createFixedPoint(x, precision):
@@ -90,6 +85,19 @@ class LSTM:
         print(f"Wx fixed: {self.fixed_Wx}")
         print(f"Wh fixed: {self.fixed_Wh}")
 
+    def fixed(self):
+        min = 0
+        max = 5
+        self.Wh = [0.1 for i in range(Index.o.value + 1)]
+        self.Wx = [0.2 for i in range(Index.o.value + 1)]
+        self.bh = [0.3 for i in range(Index.o.value + 1)]
+        self.bx = [0.4 for i in range(Index.o.value + 1)]
+        self.C_prev = 0.3
+        self.h_prev = 0.2
+        self.updateFixed()
+        print(f"Wx fixed: {self.fixed_Wx}")
+        print(f"Wh fixed: {self.fixed_Wh}")
+
     def process(self, X):
         useSigmoid = [True, True, False, True]
         for x in X:
@@ -99,12 +107,13 @@ class LSTM:
                 scaled[i] = (
                     self.Wx[i] * x + self.Wh[i] * self.h_prev + self.bx[i] + self.bh[i]
                 )
+                print(f"scaled {i}: {self.fixed_Wx[i]} * {fixedPoint(x, precision)}/256 + {self.fixed_Wh[i]} * {self.fixed_h_prev}/256 + {self.fixed_bx[i]} + {self.fixed_bh[i]}")
                 # branch on activation functions
                 if useSigmoid[i]:
                     activated[i] = sigmoid(scaled[i])
                 else:
                     activated[i] = math.tanh(scaled[i])
-            print(createFixedPoint(scaled, precision))
+            print(f"scaled: {createFixedPoint(scaled, precision)}")
             # long term
             C_t = (
                 activated[Index.f.value] * self.C_prev
@@ -164,6 +173,9 @@ class LAYERED_LSTM:
 
     def rand(self):
         [layer.rand() for layer in self.layer]
+
+    def fixed(self):
+        [layer.fixed() for layer in self.layer]
 
     def process(self, X):
         """

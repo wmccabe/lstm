@@ -44,6 +44,14 @@ module lstm #
     localparam DLY = 7;
     localparam logic [3:0] use_sigmoid = 4'b1011;
 
+    function [15 : 0] multiply_scale(input [15 : 0] a, b);
+        logic [31 : 0] multiply;
+        begin
+            multiply = ({{16{a[15]}},a} * {{16{b[15]}},b}) >> 8;
+            multiply_scale = multiply[15:0];
+        end
+    endfunction
+
     logic signed [WIDTH - 1 : 0]                  x_in_reg;
     logic signed [WIDTH - 1 : 0]                  h_in_reg;
     logic signed [WIDTH - 1 : 0]                  C_in_reg;
@@ -51,7 +59,7 @@ module lstm #
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] weight_h_reg;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_x_reg;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] bias_h_reg;
-    
+
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] scaled;
     logic signed                                  scaled_valid;
     logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] activated;
@@ -97,27 +105,13 @@ module lstm #
         else if (valid)               C_in_reg <= C_out;
     end
 
-    logic signed [WEIGHTS - 1 : 0][31 : 0] product_x;
-    logic signed [WEIGHTS - 1 : 0][31 : 0] product_h;
-    logic signed [WEIGHTS - 1 : 0][31 : 0] rescale_x;
-    logic signed [WEIGHTS - 1 : 0][31 : 0] rescale_h;
-
-    always_comb begin
-        for (int j = 0; j < WEIGHTS; j++) begin
-            product_x[j] = x_in_reg*weight_x_reg[j];
-            product_h[j] = h_in_reg*weight_h_reg[j];
-            rescale_x[j] = product_x[j] >>> 8;
-            rescale_h[j] = product_h[j] >>> 8;
-        end
-    end
-        
-    assign debug = {product_x[0][15:0], product_h[0][15:0], rescale_x[0][15:0], rescale_h[0][15:0]};
+    assign debug = scaled;
     assign debug_valid = scaled_valid;
 
     // implement weighting and scaling
     always_ff @(posedge clk) begin
         for(int j = 0; j < WEIGHTS; j = j + 1) begin 
-            scaled[j] <= rescale_x[j][WIDTH-1 : 0] + rescale_h[j][WIDTH-1 : 0] + bias_x_reg[j] + bias_h_reg[j];
+            scaled[j] <= multiply_scale(x_in_reg, weight_x_reg[j]) + multiply_scale(h_in_reg, weight_h_reg[j]) + bias_x_reg[j] + bias_h_reg[j];
         end
     end
 
@@ -165,30 +159,14 @@ module lstm #
     end
     endgenerate
 
-    logic signed [31 : 0] product_fC;
-    logic signed [31 : 0] product_ig;
-    logic signed [31 : 0] product_oCtan;
-    logic signed [31 : 0] rescale_fC;
-    logic signed [31 : 0] rescale_ig;
-    logic signed [31 : 0] rescale_oCtan;
-
-    always_comb begin
-        product_fC = activated_dly[f]*C_in_reg;
-        product_ig = activated_dly[i]*activated_dly[g];
-        product_oCtan = activated_dly[o]*C_out_tanh;
-        rescale_fC = product_fC >>> 8;
-        rescale_ig = product_ig >>> 8;
-        rescale_oCtan = product_oCtan >>> 8;
-    end
-
     // assign long term and short term memories
     always_ff @(posedge clk) begin
         activated_dly <= activated; 
         // long term
-        C_out_pre <= rescale_fC[15:0] + rescale_ig[15:0];
+        C_out_pre <= multiply_scale(activated_dly[f], C_in_reg) + multiply_scale(activated_dly[i], activated_dly[g]);
         C_out <= C_out_pre;
         // short term
-        y_out <= rescale_oCtan[15:0];
+        y_out <= multiply_scale(activated_dly[o], C_out_tanh);
         x_in_valid_dly <= {x_in_valid_dly[DLY - 2 : 0], x_in_valid && ready};
     end
 
@@ -196,8 +174,8 @@ module lstm #
     assign ready = !(|x_in_valid_dly); 
     assign scaled_valid = x_in_valid_dly[1];
     assign activated_dly_valid = x_in_valid_dly[2];
-    
-    
+
+
     function_lookup #(
         .DEPTH         (        888),
         .SCALED_X      (        887),
