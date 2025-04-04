@@ -1,7 +1,7 @@
 module axi4_lite_lstm_layers_wrapper #(
     parameter WIDTH = 32,
     parameter DEPTH = 512,
-    parameter LAYERS = 1,
+    parameter LAYERS = 2,
     localparam WEIGHTS = 4,
     localparam ADDR_WIDTH = $clog2(DEPTH)
 )

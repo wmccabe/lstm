@@ -8,7 +8,7 @@ from lstm import LAYERED_LSTM
 import lstm
 
 ##############################################
-layers = 1
+layers = 2
 read_write_size = 4
 Epsilon = 5
 
