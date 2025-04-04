@@ -8,7 +8,7 @@ from lstm import LAYERED_LSTM
 import lstm
 
 ##############################################
-layers = 2
+layers = 4
 read_write_size = 4
 Epsilon = 5
 
@@ -112,7 +112,7 @@ def main():
     lstmHW.rand()
     lstmHW.write_config(fd)
     lstmHW.read_config(fd)
-    x = [random.uniform(-5, 5) for i in range(int(random.uniform(100, 100)))]
+    x = [random.uniform(-5, 5) for i in range(int(random.uniform(1, 100)))]
     print(lstm.createFixedPoint(x, lstm.precision))
     lstmHW.process_hw(fd, x)
 
