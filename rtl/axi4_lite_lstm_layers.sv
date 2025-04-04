@@ -34,12 +34,9 @@ module axi4_lite_lstm_layers #(
     output logic [31 : 0] rdata,
     output logic  [1 : 0] rresp,
     output logic          rvalid,
-    input  logic          rready,
-    output logic [15 : 0] y_out,
-    output logic          y_out_valid,
-    output logic signed [LAYERS*WEIGHTS - 1 : 0][15 : 0] debug,
-    output logic signed [LAYERS-1 : 0]                   debug_valid
+    input  logic          rready
  );
+
     localparam NUM_ADDRESSES = (4 * LAYERS * WEIGHTS) + (2 * LAYERS) + 1;
     localparam ADDRESS_STEP = 4; 
     logic [31 : 0] write_addr;
@@ -117,6 +114,8 @@ module axi4_lite_lstm_layers #(
     localparam C_OUT = Y_OUT + ADDRESS_STEP;
     localparam VERSION = C_OUT + ADDRESS_STEP; 
 
+    logic [15 : 0] y_out;
+    logic          y_out_valid;
     logic [15 : 0] C_out;
     logic [15 : 0] C_out_dly;
     logic          valid_dly;
@@ -149,9 +148,7 @@ module axi4_lite_lstm_layers #(
         .x_in_valid     (decode_write_enable[X_IN]                         ),
         .y_out          (y_out                                             ),
         .C_out          (C_out                                             ),
-        .valid          (lstm_valid                                        ),
-        .debug         (debug                                            ),
-        .debug_valid   (debug_valid                                      )
+        .valid          (lstm_valid                                        )
      );
     
     assign y_out_valid = lstm_valid;

@@ -29,9 +29,7 @@ module lstm #
     input  logic                        x_in_valid,
     output logic signed [WIDTH - 1 : 0] y_out,
     output logic signed [WIDTH - 1 : 0] C_out,
-    output logic                        valid,
-    output logic signed [WEIGHTS - 1 : 0][WIDTH - 1 : 0] debug,
-    output logic signed                                  debug_valid
+    output logic                        valid
 );
 
     // Enums correspond to different logic paths in the LSTM
@@ -104,9 +102,6 @@ module lstm #
         else if (ready && C_in_valid) C_in_reg <= C_in;
         else if (valid)               C_in_reg <= C_out;
     end
-
-    assign debug = scaled;
-    assign debug_valid = scaled_valid;
 
     // implement weighting and scaling
     always_ff @(posedge clk) begin

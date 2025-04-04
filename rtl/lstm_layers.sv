@@ -28,9 +28,7 @@ module lstm_layers #
     input  logic                                        x_in_valid,
     output logic signed                 [WIDTH - 1 : 0] y_out,
     output logic signed                 [WIDTH - 1 : 0] C_out,
-    output logic                                        valid,
-    output logic signed [LAYERS*WEIGHTS - 1 : 0][WIDTH - 1 : 0] debug,
-    output logic signed [LAYERS-1: 0]                           debug_valid
+    output logic                                        valid
 );
 
     logic        [LAYERS - 1 : 0]                layer_ready;
@@ -74,9 +72,7 @@ module lstm_layers #
             .x_in_valid       (layer_x_in_valid[layer] ),
             .y_out            (layer_y_out[layer]      ),
             .C_out            (layer_C_out[layer]      ),
-            .valid            (layer_valid[layer]      ),
-            .debug           (debug[layer*WEIGHTS +: WEIGHTS] ),
-            .debug_valid     (debug_valid[layer] )
+            .valid            (layer_valid[layer]      )
         );
         
         if (layer == 0) begin
