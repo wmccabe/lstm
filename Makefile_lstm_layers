@@ -4,23 +4,17 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/rtl/version_package.sv
-VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_lstm_layers_wrapper.v
-VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_lstm_layers.sv
-VERILOG_SOURCES += $(PWD)/rtl/axi4_lite_slave.sv
-VERILOG_SOURCES += $(PWD)/rtl/ram_tdp_rf.sv
 VERILOG_SOURCES += $(PWD)/rtl/lstm_layers.sv
 VERILOG_SOURCES += $(PWD)/rtl/lstm.sv
 VERILOG_SOURCES += $(PWD)/rtl/function_lookup.sv
 VERILOG_SOURCES += $(PWD)/rtl/rom.sv
-VERILOG_SOURCES += $(PWD)/rtl/axi_handshake.sv
-VERILOG_SOURCES += $(PWD)/rtl/address_decoder.sv
+# use VHDL_SOURCES for VHDL files
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = axi4_lite_lstm_layers_wrapper
+TOPLEVEL = lstm_layers
 
 # MODULE is the basename of the Python test file
-MODULE = cocotb_axi4_lite_lstm
+MODULE = cocotb_lstm_layers
 
 # Add waveform tracing
 EXTRA_ARGS += --trace --trace-structs

@@ -26,7 +26,6 @@ async def test_lstm(dut):
     for i in range(4):
         ver_dec.append(version_register & 0xFF)
         version_register >>= 8
-    print(f"ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}")
     for lyr in range(dut.LAYERS.value):
         for i in range(lstm.gates):
             await cocotb.start_soon(
