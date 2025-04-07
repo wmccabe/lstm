@@ -13,6 +13,7 @@ read_write_size = 4
 Epsilon = 5
 module_offset = 0x6000
 
+
 def convert_signed(unsigned, bits):
     if unsigned < (2 ** (bits - 1)):
         return unsigned
@@ -103,12 +104,14 @@ def main():
     for i in range(4):
         ver_dec.append(version_register & 0xFF)
         version_register >>= 8
-    print(f"Version Register: ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}")
+    print(
+        f"Version Register: ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}"
+    )
     lstmHW.rand()
     lstmHW.write_config(fd)
     lstmHW.read_config(fd)
     x = [random.uniform(-5, 5) for i in range(int(random.uniform(1, 100)))]
-    print(f"Batch Size {len(x)}")
+    print(f"Input sequence length {len(x)}")
     lstmHW.process_hw(fd, x)
 
 

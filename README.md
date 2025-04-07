@@ -28,7 +28,7 @@ Example Output:
 ```
 ~/Documents/lstm$ sudo python3 lstm_pcie.py
 Version Register: ID.Major.Minor.Patch = 34.1.1.6
-Batch Size 85
+Input sequence length 85
 Fixed Point C out Model result 47, hardware: 46
 Model result 0.10401, hardware:  0.10156
 FIXED POINT: Model result 27, hardware: 26
