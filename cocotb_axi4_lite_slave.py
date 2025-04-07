@@ -15,8 +15,8 @@ async def randomize_user_ready(dut):
 
 async def test_axi_lite(dut):
     addresses_data = [
-        (i, int(random.uniform(0, 2**dut.WIDTH.value - 1)))
-        for i in range(dut.DEPTH.value)
+        (i, int(random.uniform(0, 2**dut.AXI_WIDTH.value - 1)))
+        for i in range(dut.AXI_DEPTH.value)
     ]
     random.shuffle(addresses_data)
     await cocotb.triggers.RisingEdge(dut.clk)

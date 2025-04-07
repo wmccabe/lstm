@@ -1,7 +1,7 @@
 module axi4_lite_slave #(
-    parameter WIDTH = 32,
-    parameter DEPTH = 256,
-    localparam ADDR_WIDTH = $clog2(DEPTH)
+    parameter AXI_WIDTH = 32,
+    parameter AXI_DEPTH = 256,
+    localparam ADDR_WIDTH = $clog2(AXI_DEPTH)
 )
 (
     input  logic          clk,
@@ -162,8 +162,8 @@ module axi4_lite_slave #(
     assign addrb = update_valid ? update_addr[ADDR_WIDTH - 1 : 0] : read_addr[ADDR_WIDTH - 1 : 0];
 
     rams_tdp_rf_rf #(
-        .WIDTH (WIDTH),
-        .DEPTH (DEPTH)
+        .WIDTH (AXI_WIDTH),
+        .DEPTH (AXI_DEPTH)
     )
     u_true_dual_port_cache
     ( 

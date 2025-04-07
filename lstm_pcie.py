@@ -11,7 +11,7 @@ import lstm
 layers = 4
 read_write_size = 4
 Epsilon = 5
-
+module_offset = 0x6000
 
 def convert_signed(unsigned, bits):
     if unsigned < (2 ** (bits - 1)):
@@ -83,7 +83,7 @@ class LAYERED_LSTM_HARDWARE(LAYERED_LSTM):
         C_out_hw_fixed = convert_signed(C_out_hw_fixed, 16)
         self.process(x)
         print(
-            f"C out Model result {self.layer[-1].fixed_C_prev}, hardware: {C_out_hw_fixed}"
+            f"Fixed Point C out Model result {self.layer[-1].fixed_C_prev}, hardware: {C_out_hw_fixed}"
         )
         y_out_hw = lstm.floatingPoint(y_out_hw_fixed, lstm.precision)
         print(f"Model result {self.layer[-1].h_prev:.5}, hardware: {y_out_hw: .5}")
@@ -97,23 +97,18 @@ def main():
 
     fd = os.open("/dev/xdma0_user", os.O_RDWR)
 
-    # Product
-    pid_string = os.pread(fd, read_write_size, 0x0)[::-1]
-    pvrsn = read(fd, 0x8, signed=False)
-    print("Found product ID %s version %d" % (pid_string, pvrsn))
-
-    lstmHW = LAYERED_LSTM_HARDWARE(layers=layers, offset=0x6000)
+    lstmHW = LAYERED_LSTM_HARDWARE(layers=layers, offset=module_offset)
     ver_dec = []
     version_register = read(fd, lstmHW.version_address)
     for i in range(4):
         ver_dec.append(version_register & 0xFF)
         version_register >>= 8
-    print(f"ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}")
+    print(f"Version Register: ID.Major.Minor.Patch = {ver_dec[3]}.{ver_dec[2]}.{ver_dec[1]}.{ver_dec[0]}")
     lstmHW.rand()
     lstmHW.write_config(fd)
     lstmHW.read_config(fd)
     x = [random.uniform(-5, 5) for i in range(int(random.uniform(1, 100)))]
-    print(lstm.createFixedPoint(x, lstm.precision))
+    print(f"Batch Size {len(x)}")
     lstmHW.process_hw(fd, x)
 
 

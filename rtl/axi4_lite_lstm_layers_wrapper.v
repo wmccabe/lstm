@@ -1,9 +1,9 @@
 module axi4_lite_lstm_layers_wrapper #(
-    parameter WIDTH = 32,
-    parameter DEPTH = 512,
+    parameter AXI_WIDTH = 32,
+    parameter AXI_DEPTH = 512,
     parameter LAYERS = 4,
     localparam WEIGHTS = 4,
-    localparam ADDR_WIDTH = $clog2(DEPTH)
+    localparam ADDR_WIDTH = $clog2(AXI_DEPTH)
 )
 (
     input            clk,
@@ -36,8 +36,8 @@ module axi4_lite_lstm_layers_wrapper #(
 );
 
     axi4_lite_lstm_layers #(
-        .WIDTH      (WIDTH      ),
-        .DEPTH      (DEPTH      ),
+        .AXI_WIDTH  (AXI_WIDTH  ),
+        .AXI_DEPTH  (AXI_DEPTH  ),
         .LAYERS     (LAYERS     )
     ) u_axi4_lite_lstm_layers(
         .clk        (clk        ),
