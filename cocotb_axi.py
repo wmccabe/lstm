@@ -4,7 +4,7 @@ import random
 verbose = False
 
 
-async def send_write_address(dut, address):
+async def send_write_address(dut):
     # Write Address
     dut.awvalid.value = 1
     await cocotb.triggers.RisingEdge(dut.clk)
@@ -16,7 +16,7 @@ async def send_write_address(dut, address):
         dut.awvalid.value = 0
 
 
-async def send_write_data(dut, data):
+async def send_write_data(dut):
     # Write Data
     dut.wvalid.value = 1
     await cocotb.triggers.RisingEdge(dut.clk)
@@ -37,18 +37,18 @@ async def write(dut, address, data):
     # randomize if write address or data is sent first
     random_path = random.randint(0, 2)
     if random_path == 0:
-        cocotb.start_soon(send_write_address(dut, address))
+        cocotb.start_soon(send_write_address(dut))
         for _ in range(random.randint(0, 5)):
             await cocotb.triggers.RisingEdge(dut.clk)
-        await cocotb.start_soon(send_write_data(dut, data))
+        await cocotb.start_soon(send_write_data(dut))
     elif random_path == 1:
-        cocotb.start_soon(send_write_data(dut, data))
+        cocotb.start_soon(send_write_data(dut))
         for _ in range(random.randint(0, 5)):
             await cocotb.triggers.RisingEdge(dut.clk)
-        await cocotb.start_soon(send_write_address(dut, address))
+        await cocotb.start_soon(send_write_address(dut))
     else:
-        cocotb.start_soon(send_write_data(dut, data))
-        cocotb.start_soon(send_write_address(dut, address))
+        cocotb.start_soon(send_write_data(dut))
+        cocotb.start_soon(send_write_address(dut))
 
     # Acknowledge write response
     dut.bready.value = 1
